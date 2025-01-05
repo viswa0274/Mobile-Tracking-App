@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="red">#F44336</color>
+    <color name="green">#4CAF50</color>
+    <color name="burgundy">#800020</color>
+    <color name="navy">#000080</color>
+    <color name="cardBackgroundColor">#F5F5F5</color> <!-- Soft light gray -->
+    <color name="rowBackgroundColor">#E0F7FA</color> <!-- Light cyan -->
+    <color name="textPrimaryColor">#00796B</color> <!-- Teal -->
+    <color name="buttonBackgroundColor">#FF6F00</color> <!-- Vibrant orange -->
+    <color name="primaryColo">#6200EE</color> <!-- Deep purple -->
+    <color name="progressColor">#03DAC5</color> <!-- Teal -->
+    <color name="cardBackground">#F5F5F5</color> <!-- Light gray -->
+    <color name="textPrimary">#1F1F1F</color> <!-- Almost black -->
+    <color name="textSecondary">#757575</color> <!-- Medium gray -->
+    <color name="buttonBackground">#FF5722</color> <!-- Vibrant orange -->
+    <color name="dividerColor">#E0E0E0</color> <!-- Light gray for divider -->
+    <color name="navIconColor">#757575</color>
+    <color name="screenBackground">#F5F5F5</color>
+    <color name="primaryColor">#3F51B5</color> <!-- Example primary color -->
+    <color name="device_name_color" tools:ignore="DuplicateDefinition">#3498DB</color>
+    <color name="device_type_color" tools:ignore="DuplicateDefinition">#E74C3C</color>
+</resources>

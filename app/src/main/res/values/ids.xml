@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="etName" type="id" />
+    <item name="etPhone" type="id" />
+    <item name="etEmail" type="id" />
+    <item name="etPassword" type="id" />
+    <item name="etConfirmPassword" type="id" />
+    <item name="btnSubmit" type="id" />
+    <item name="signUpTitle" type="id" />
+    <item name="btnLogin" type="id" />
+    <item name="etDeviceName" type="id" />
+    <item name="spDeviceType" type="id" />
+    <item name="etModel" type="id" />
+    <item name="etSerialNumber" type="id" />
+    <item name="etContactNumber" type="id" />
+    <item name="btnCancel" type="id" />
+    <item name="imgAddDevice" type="id" />
+    <item name="viewDevicesCardView" type="id" />
+    <item name="devicesLayout" type="id" />
+</resources>

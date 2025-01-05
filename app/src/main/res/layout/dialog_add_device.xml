@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#F9F9F9">
+
+    <!-- Device Name -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilDeviceName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"> <!-- Corrected usage here -->
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etDeviceName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Device Name"
+            android:inputType="text"
+            android:textColor="#333333"
+            app:boxBackgroundColor="@android:color/white"
+            app:boxStrokeColor="#D1D1D1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Device Type -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilDeviceType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"> <!-- Corrected usage here -->
+
+        <Spinner
+            android:id="@+id/spDeviceType"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:entries="@array/device_types"
+            android:popupBackground="@android:color/white"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Model -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilModel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"> <!-- Corrected usage here -->
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etModel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Model"
+            android:textColor="#333333"
+            app:boxBackgroundColor="@android:color/white"
+            app:boxStrokeColor="#D1D1D1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Serial Number/IMEI -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilSerialNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"> <!-- Corrected usage here -->
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etSerialNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Serial Number/IMEI"
+            android:inputType="text"
+            android:maxLength="15"
+            android:textColor="#333333"
+            app:boxBackgroundColor="@android:color/white"
+            app:boxStrokeColor="#D1D1D1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Contact Number -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilContactNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"> <!-- Corrected usage here -->
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etContactNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Contact Number"
+            android:inputType="phone"
+            android:maxLength="10"
+            android:textColor="#333333"
+            app:boxBackgroundColor="@android:color/white"
+            app:boxStrokeColor="#D1D1D1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            app:cornerRadius="16dp"
+            app:backgroundTint="@color/red"
+            android:textColor="@android:color/white"
+            android:layout_marginEnd="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSubmit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Submit"
+            app:cornerRadius="16dp"
+            app:backgroundTint="@color/green"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">tracking</string>
+    <string-array name="device_types">
+        <item>Smartphone</item>
+        <item>Tablet</item>
+        <item>Watch</item>
+    </string-array>
+</resources>
