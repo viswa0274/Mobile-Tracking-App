@@ -17,4 +17,5 @@
     <item name="imgAddDevice" type="id" />
     <item name="viewDevicesCardView" type="id" />
     <item name="devicesLayout" type="id" />
+    <item name="spFetchFCMToken" type="id" />
 </resources>

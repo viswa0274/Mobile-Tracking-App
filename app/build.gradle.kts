@@ -54,6 +54,7 @@ dependencies {
     // OpenStreetMap (OSMDroid)
     implementation(libs.osmdroid.android)
     implementation(libs.osmdroid.wms)
+    implementation(libs.firebase.messaging.ktx)
 
     // Testing libraries
     testImplementation(libs.junit)

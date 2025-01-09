@@ -61,10 +61,8 @@ class DashboardActivity : AppCompatActivity() {
         }
 
     }
-    @SuppressLint("SetTextI18n", "MissingInflatedId")
 
-
-    // Method to open the dialog for adding a device
+    @SuppressLint("SetTextI18n", "MissingInflatedId", "HardwareIds")
     private fun openAddDeviceDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_device, null)
         val etDeviceName: EditText = dialogView.findViewById(R.id.etDeviceName)
@@ -72,6 +70,7 @@ class DashboardActivity : AppCompatActivity() {
         val etModel: EditText = dialogView.findViewById(R.id.etModel)
         val etSerialNumber: EditText = dialogView.findViewById(R.id.etSerialNumber)
         val etContactNumber: EditText = dialogView.findViewById(R.id.etContactNumber)
+        val spFetchFCMToken: Spinner = dialogView.findViewById(R.id.spCurrentDevice) // Spinner for Yes/No
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -88,6 +87,7 @@ class DashboardActivity : AppCompatActivity() {
             val model = etModel.text.toString().trim()
             val serialNumber = etSerialNumber.text.toString().trim()
             val contactNumber = etContactNumber.text.toString().trim()
+            val fetchFCMToken = spFetchFCMToken.selectedItem.toString() // "Yes" or "No"
             val userId = sessionManager.getUserId()
 
             if (deviceName.isEmpty() || model.isEmpty() || serialNumber.isEmpty() || contactNumber.isEmpty()) {
@@ -99,6 +99,11 @@ class DashboardActivity : AppCompatActivity() {
             } else if (userId == null) {
                 Toast.makeText(this, "User is not logged in", Toast.LENGTH_SHORT).show()
             } else {
+                val androidId = android.provider.Settings.Secure.getString(
+                    contentResolver,
+                    android.provider.Settings.Secure.ANDROID_ID
+                )
+
                 firestore.collection("device")
                     .whereEqualTo("serialNumber", serialNumber)
                     .get()
@@ -112,26 +117,64 @@ class DashboardActivity : AppCompatActivity() {
                                 "model" to model,
                                 "serialNumber" to serialNumber,
                                 "contactNumber" to contactNumber,
-                                "userId" to userId
+                                "userId" to userId,
+                                "androidId" to androidId
                             )
 
-                            firestore.collection("device")
-                                .add(deviceData)
-                                .addOnSuccessListener {
-                                    Toast.makeText(this, "Device added successfully", Toast.LENGTH_SHORT).show()
-                                    dialog.dismiss()
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(this, "Failed to add device: ${e.message}", Toast.LENGTH_SHORT).show()
-                                }
+                            if (fetchFCMToken == "Yes") {
+                                // Fetch FCM token
+                                com.google.firebase.messaging.FirebaseMessaging.getInstance().token
+                                    .addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            val fcmToken = task.result
+                                            deviceData["fcmToken"] = fcmToken
+
+                                            // Insert data into Firestore
+                                            addDeviceToFirestore(deviceData, dialog)
+                                        } else {
+                                            Toast.makeText(
+                                                this,
+                                                "Failed to fetch FCM token: ${task.exception?.message}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                            } else {
+                                // Insert without FCM token
+                                addDeviceToFirestore(deviceData, dialog)
+                            }
                         }
                     }
                     .addOnFailureListener { e ->
-                        Toast.makeText(this, "Error checking serial number: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "Error checking serial number: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
             }
         }
 
         dialog.show()
+    }
+
+    private fun addDeviceToFirestore(deviceData: HashMap<String, String>, dialog: AlertDialog) {
+        firestore.collection("device")
+            .add(deviceData)
+            .addOnSuccessListener {
+                Toast.makeText(
+                    this,
+                    "Device added successfully",
+                    Toast.LENGTH_SHORT
+                ).show()
+                dialog.dismiss()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(
+                    this,
+                    "Failed to add device: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
     }
 }

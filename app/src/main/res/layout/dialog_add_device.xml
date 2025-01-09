@@ -13,7 +13,7 @@
         android:id="@+id/tilDeviceName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"> <!-- Corrected usage here -->
+        android:layout_marginTop="8dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etDeviceName"
@@ -31,14 +31,14 @@
         android:id="@+id/tilDeviceType"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"> <!-- Corrected usage here -->
+        android:layout_marginTop="8dp">
 
         <Spinner
             android:id="@+id/spDeviceType"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:entries="@array/device_types"
-            android:popupBackground="@android:color/white"/>
+            android:popupBackground="@android:color/white" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Model -->
@@ -46,7 +46,7 @@
         android:id="@+id/tilModel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"> <!-- Corrected usage here -->
+        android:layout_marginTop="8dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etModel"
@@ -63,7 +63,7 @@
         android:id="@+id/tilSerialNumber"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"> <!-- Corrected usage here -->
+        android:layout_marginTop="8dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etSerialNumber"
@@ -82,7 +82,7 @@
         android:id="@+id/tilContactNumber"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"> <!-- Corrected usage here -->
+        android:layout_marginTop="8dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etContactNumber"
@@ -94,6 +94,21 @@
             android:textColor="#333333"
             app:boxBackgroundColor="@android:color/white"
             app:boxStrokeColor="#D1D1D1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Is this your current device? -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilCurrentDevice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp">
+
+        <Spinner
+            android:id="@+id/spCurrentDevice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:entries="@array/yes_no"
+            android:popupBackground="@android:color/white" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Buttons -->
