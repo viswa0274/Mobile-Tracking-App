@@ -7,12 +7,16 @@ import android.view.LayoutInflater
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import com.google.android.gms.location.*
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 
 class DashboardActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private val firestore = FirebaseFirestore.getInstance()
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,6 +24,7 @@ class DashboardActivity : AppCompatActivity() {
 
         // Initialize SessionManager
         sessionManager = SessionManager(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // Check if user is logged in
         val uid = sessionManager.getUserId()
@@ -59,7 +64,6 @@ class DashboardActivity : AppCompatActivity() {
             intent.putExtra("userId", uid) // Pass userId to the next activity
             startActivity(intent)
         }
-
     }
 
     @SuppressLint("SetTextI18n", "MissingInflatedId", "HardwareIds")
@@ -70,7 +74,6 @@ class DashboardActivity : AppCompatActivity() {
         val etModel: EditText = dialogView.findViewById(R.id.etModel)
         val etSerialNumber: EditText = dialogView.findViewById(R.id.etSerialNumber)
         val etContactNumber: EditText = dialogView.findViewById(R.id.etContactNumber)
-        val spFetchFCMToken: Spinner = dialogView.findViewById(R.id.spCurrentDevice) // Spinner for Yes/No
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -87,7 +90,6 @@ class DashboardActivity : AppCompatActivity() {
             val model = etModel.text.toString().trim()
             val serialNumber = etSerialNumber.text.toString().trim()
             val contactNumber = etContactNumber.text.toString().trim()
-            val fetchFCMToken = spFetchFCMToken.selectedItem.toString() // "Yes" or "No"
             val userId = sessionManager.getUserId()
 
             if (deviceName.isEmpty() || model.isEmpty() || serialNumber.isEmpty() || contactNumber.isEmpty()) {
@@ -104,53 +106,29 @@ class DashboardActivity : AppCompatActivity() {
                     android.provider.Settings.Secure.ANDROID_ID
                 )
 
-                firestore.collection("device")
-                    .whereEqualTo("serialNumber", serialNumber)
-                    .get()
-                    .addOnSuccessListener { documents ->
-                        if (!documents.isEmpty) {
-                            Toast.makeText(this, "Device already added", Toast.LENGTH_SHORT).show()
-                        } else {
-                            val deviceData = hashMapOf(
-                                "deviceName" to deviceName,
-                                "deviceType" to deviceType,
-                                "model" to model,
-                                "serialNumber" to serialNumber,
-                                "contactNumber" to contactNumber,
-                                "userId" to userId,
-                                "androidId" to androidId
+                // Fetch FCM token and proceed
+                com.google.firebase.messaging.FirebaseMessaging.getInstance().token
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val fcmToken = task.result
+                            checkForDuplicateAndroidIdAndFcmToken(
+                                androidId,
+                                fcmToken,
+                                deviceName,
+                                deviceType,
+                                model,
+                                serialNumber,
+                                contactNumber,
+                                userId,
+                                dialog
                             )
-
-                            if (fetchFCMToken == "Yes") {
-                                // Fetch FCM token
-                                com.google.firebase.messaging.FirebaseMessaging.getInstance().token
-                                    .addOnCompleteListener { task ->
-                                        if (task.isSuccessful) {
-                                            val fcmToken = task.result
-                                            deviceData["fcmToken"] = fcmToken
-
-                                            // Insert data into Firestore
-                                            addDeviceToFirestore(deviceData, dialog)
-                                        } else {
-                                            Toast.makeText(
-                                                this,
-                                                "Failed to fetch FCM token: ${task.exception?.message}",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
-                            } else {
-                                // Insert without FCM token
-                                addDeviceToFirestore(deviceData, dialog)
-                            }
+                        } else {
+                            Toast.makeText(
+                                this,
+                                "Failed to fetch FCM token: ${task.exception?.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
-                    }
-                    .addOnFailureListener { e ->
-                        Toast.makeText(
-                            this,
-                            "Error checking serial number: ${e.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
                     }
             }
         }
@@ -158,23 +136,146 @@ class DashboardActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun addDeviceToFirestore(deviceData: HashMap<String, String>, dialog: AlertDialog) {
+    private fun checkForDuplicateAndroidIdAndFcmToken(
+        androidId: String,
+        fcmToken: String?,
+        deviceName: String,
+        deviceType: String,
+        model: String,
+        serialNumber: String,
+        contactNumber: String,
+        userId: String,
+        dialog: AlertDialog
+    ) {
         firestore.collection("device")
-            .add(deviceData)
-            .addOnSuccessListener {
-                Toast.makeText(
-                    this,
-                    "Device added successfully",
-                    Toast.LENGTH_SHORT
-                ).show()
-                dialog.dismiss()
+            .whereEqualTo("androidId", androidId)
+            .get()
+            .addOnSuccessListener { androidIdDocs ->
+                if (!androidIdDocs.isEmpty) {
+                    Toast.makeText(this, "This Device Already Added", Toast.LENGTH_SHORT).show()
+                } else if (fcmToken != null) {
+                    firestore.collection("device")
+                        .whereEqualTo("fcmToken", fcmToken)
+                        .get()
+                        .addOnSuccessListener { fcmDocs ->
+                            if (!fcmDocs.isEmpty) {
+                                Toast.makeText(this, "Device with this FCM token already exists", Toast.LENGTH_SHORT).show()
+                            } else {
+                                val deviceData = hashMapOf(
+                                    "deviceName" to deviceName,
+                                    "deviceType" to deviceType,
+                                    "model" to model,
+                                    "serialNumber" to serialNumber,
+                                    "contactNumber" to contactNumber,
+                                    "userId" to userId,
+                                    "androidId" to androidId
+                                )
+                                if (fcmToken != null) {
+                                    deviceData["fcmToken"] = fcmToken
+                                }
+
+                                addDeviceToFirestore(deviceData, serialNumber, dialog, fcmToken)
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(
+                                this,
+                                "Error checking FCM token: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                } else {
+                    val deviceData = hashMapOf(
+                        "deviceName" to deviceName,
+                        "deviceType" to deviceType,
+                        "model" to model,
+                        "serialNumber" to serialNumber,
+                        "contactNumber" to contactNumber,
+                        "userId" to userId,
+                        "androidId" to androidId
+                    )
+                    addDeviceToFirestore(deviceData, serialNumber, dialog, null)
+                }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(
-                    this,
-                    "Failed to add device: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, "Error checking Android ID: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
+    private fun addDeviceToFirestore(
+        deviceData: HashMap<String, String>,
+        serialNumber: String,
+        dialog: AlertDialog,
+        fcmToken: String?
+    ) {
+        // Add the device to Firestore
+        firestore.collection("device")
+            .document() // Auto-generate a document ID
+            .set(deviceData)
+            .addOnSuccessListener {
+                // After adding the device, capture the location
+                saveDeviceLocation(serialNumber, fcmToken)
+                dialog.dismiss()
+                Toast.makeText(this, "Device added successfully", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error adding device: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun saveDeviceLocation(serialNumber: String, fcmToken: String?) {
+        if (fcmToken == null) {
+            Toast.makeText(this, "FCM Token is missing, cannot save location", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Check for location permission
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            // Request permission if not granted
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                100
+            )
+            return
+        }
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            val locationData = if (location == null) {
+                hashMapOf(
+                    "location" to null,
+                    "lastUpdated" to System.currentTimeMillis()
+                     // Save FCM token here
+                )
+            } else {
+                hashMapOf(
+                    "location" to GeoPoint(location.latitude, location.longitude),
+                    "lastUpdated" to System.currentTimeMillis()
+
+                )
+            }
+
+            firestore.collection("device_locations")
+                .document(fcmToken) // Use fcmToken as document ID
+                .set(locationData)
+                .addOnSuccessListener {
+                    val message = if (location == null) {
+                        "Device location (null) and FCM token saved successfully"
+                    } else {
+                        "Device location and FCM token saved successfully"
+                    }
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Error saving location: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+        }.addOnFailureListener { e ->
+            Toast.makeText(this, "Error retrieving location: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 }

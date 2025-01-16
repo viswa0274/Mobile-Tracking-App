@@ -3,19 +3,24 @@ package com.example.tracking
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
+import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.textview.MaterialTextView
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 
 class DeviceDetailsActivity : AppCompatActivity() {
 
     private val firestore = FirebaseFirestore.getInstance()
 
-    @SuppressLint("SetTextI18n", "WrongViewCast")
+    @SuppressLint("SetTextI18n", "WrongViewCast", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device_details)
@@ -27,22 +32,26 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val deviceModelView: MaterialTextView = findViewById(R.id.deviceModel)
         val contactNumberView: MaterialTextView = findViewById(R.id.contactNumber)
         val traceLocationButton: MaterialButton = findViewById(R.id.traceLocationButton)
+        val threeDots: ImageView = findViewById(R.id.threeDots)
         val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
 
-        // Get the device IMEI from the intent
-        val deviceImei = intent.getStringExtra("deviceImei")
-        if (deviceImei.isNullOrEmpty()) {
-            Toast.makeText(this, "Device IMEI not provided.", Toast.LENGTH_SHORT).show()
-            finish()
-            return
-        }
+        // Retrieve IMEI from the Intent
+        val imeiFromPreviousActivity = intent.getStringExtra("deviceImei") ?: "Unknown IMEI"
+
+        // Display the IMEI from the previous activity
+        deviceImeiView.text = imeiFromPreviousActivity
+
+        // Fetch FCM Token programmatically
 
         // Show the progress bar
         progressBar.visibility = View.VISIBLE
 
-        // Fetch the device details from Firestore
+        // Fetch the device details from Firestore using the FCM token
         firestore.collection("device")
-            .whereEqualTo("serialNumber", deviceImei)
+            .whereEqualTo(
+                "serialNumber",
+                imeiFromPreviousActivity
+            ) // Use FCM token to query the device
             .get()
             .addOnSuccessListener { result ->
                 progressBar.visibility = View.GONE
@@ -54,7 +63,9 @@ class DeviceDetailsActivity : AppCompatActivity() {
 
                 // Assuming there is only one result
                 val document = result.documents[0]
+                val documentId = document.id
                 val deviceName = document.getString("deviceName") ?: "Unknown"
+                val fcmtoken = document.getString("fcmToken") ?: "Unknown"
                 val deviceType = document.getString("deviceType") ?: "Unknown"
                 val deviceModel = document.getString("model") ?: "Unknown"
                 val contactNumber = document.getString("contactNumber") ?: "Not Available"
@@ -62,15 +73,35 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 // Populate the views in a tabular format
                 deviceNameView.text = deviceName
                 deviceTypeView.text = deviceType
-                deviceImeiView.text = deviceImei
                 deviceModelView.text = deviceModel
                 contactNumberView.text = contactNumber
 
                 // Set the Trace Location button action
                 traceLocationButton.setOnClickListener {
                     val intent = Intent(this, LocationTrackActivity::class.java)
-                    intent.putExtra("deviceImei", deviceImei)  // Pass IMEI as extra
+                    intent.putExtra("fcmToken", fcmtoken)  // Pass FCM token as extra
                     startActivity(intent)
+                }
+
+                // Set up the three dots (popup menu)
+                threeDots.setOnClickListener { view ->
+                    val popupMenu = PopupMenu(this, view)
+                    val inflater = popupMenu.menuInflater
+                    inflater.inflate(R.menu.device_menu, popupMenu.menu)
+
+                    popupMenu.setOnMenuItemClickListener { item: MenuItem ->
+                        when (item.itemId) {
+                            R.id.removeDevice -> {
+                                // Handle the remove device action here
+                                removeDevice(fcmtoken)
+                                true
+                            }
+
+                            else -> false
+                        }
+                    }
+
+                    popupMenu.show()
                 }
             }
             .addOnFailureListener { e ->
@@ -81,6 +112,51 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
+
+    }
+    private fun removeDevice(fcmtoken: String?) {
+        if (fcmtoken.isNullOrEmpty()) {
+            Toast.makeText(this, "FCM Token not provided.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
+        progressBar.visibility = View.VISIBLE
+
+        // Fetch the device document from Firestore and delete it
+        firestore.collection("device")
+            .whereEqualTo("fcmToken", fcmtoken) // Use FCM token to fetch the device document
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    Toast.makeText(this, "No device found to remove.", Toast.LENGTH_SHORT).show()
+                    progressBar.visibility = View.GONE
+                    return@addOnSuccessListener
+                }
+
+                // Assuming the document exists and we can delete it
+                val document = result.documents[0]
+                val documentId = document.id
+
+                // Remove the device from Firestore
+                firestore.collection("device").document(documentId)
+                    .delete()
+                    .addOnSuccessListener {
+                        progressBar.visibility = View.GONE
+                        Toast.makeText(this, "Device removed successfully.", Toast.LENGTH_SHORT).show()
+                        finish() // Close the activity after removal
+                    }
+                    .addOnFailureListener { e ->
+                        progressBar.visibility = View.GONE
+                        Toast.makeText(this, "Error removing device: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .addOnFailureListener { e ->
+                progressBar.visibility = View.GONE
+                Toast.makeText(this, "Error fetching device details: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }
+
+
 

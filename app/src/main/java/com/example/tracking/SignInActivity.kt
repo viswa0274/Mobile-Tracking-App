@@ -6,9 +6,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.auth.FirebaseAuth
-import android.provider.Settings
-import com.google.firebase.messaging.FirebaseMessaging
+import androidx.core.content.ContextCompat
 import com.google.firebase.firestore.FirebaseFirestore
 
 class SignInActivity : AppCompatActivity() {
@@ -46,19 +44,19 @@ class SignInActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { documents ->
                 if (!documents.isEmpty) {
-                    // Assuming email is unique and fetching the first document
                     val userDocument = documents.documents[0]
                     val storedPassword = userDocument.getString("password")
 
-                    // Check if the entered password matches the stored password
                     if (enteredPassword == storedPassword) {
                         val userId = userDocument.id
-
-                        // Create a session with the fetched userId
                         sessionManager.setUserId(userId)
 
-                        // Navigate to DashboardActivity
                         Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
+
+                        // Start location service after successful login
+                        startLocationService()
+
+                        // Navigate to DashboardActivity
                         val intent = Intent(this, DashboardActivity::class.java)
                         startActivity(intent)
                         finish()
@@ -72,5 +70,11 @@ class SignInActivity : AppCompatActivity() {
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Failed to verify user: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun startLocationService() {
+        // Start the location update service
+        val intent = Intent(this, LocationTrackActivity::class.java)
+        ContextCompat.startForegroundService(this, intent)
     }
 }

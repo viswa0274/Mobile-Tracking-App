@@ -1,7 +1,6 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="16dp"
@@ -12,6 +11,15 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="16dp">
+
+        <!-- Three Dots (Overflow Menu) -->
+        <ImageView
+            android:id="@+id/threeDots"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="end"
+            android:src="@drawable/option"
+        android:contentDescription="More options" />
 
         <!-- Progress Indicator -->
         <com.google.android.material.progressindicator.CircularProgressIndicator
@@ -35,7 +43,6 @@
             <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -45,7 +52,6 @@
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
-
                 <TextView
                     android:id="@+id/deviceName"
                     android:layout_width="wrap_content"
@@ -61,7 +67,6 @@
             <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -71,7 +76,6 @@
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
-
                 <TextView
                     android:id="@+id/deviceType"
                     android:layout_width="wrap_content"
@@ -80,7 +84,6 @@
                     android:text="Mobile"
                     android:textColor="@color/navy"
                     android:textSize="16sp"
-
                     android:textStyle="bold" />
             </TableRow>
 
@@ -88,7 +91,6 @@
             <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -98,7 +100,6 @@
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
-
                 <TextView
                     android:id="@+id/deviceImei"
                     android:layout_width="wrap_content"
@@ -114,7 +115,6 @@
             <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -124,7 +124,6 @@
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
-
                 <TextView
                     android:id="@+id/deviceModel"
                     android:layout_width="wrap_content"
@@ -140,7 +139,6 @@
             <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -150,7 +148,6 @@
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
-
                 <TextView
                     android:id="@+id/contactNumber"
                     android:layout_width="wrap_content"
