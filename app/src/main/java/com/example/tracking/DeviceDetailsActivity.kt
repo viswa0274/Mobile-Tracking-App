@@ -3,24 +3,23 @@ package com.example.tracking
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.tasks.OnCompleteListener
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.textview.MaterialTextView
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.messaging.FirebaseMessaging
 
 class DeviceDetailsActivity : AppCompatActivity() {
 
     private val firestore = FirebaseFirestore.getInstance()
 
-    @SuppressLint("SetTextI18n", "WrongViewCast", "MissingInflatedId")
+    @SuppressLint("SetTextI18n", "WrongViewCast", "HardwareIds", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device_details)
@@ -31,6 +30,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val deviceImeiView: MaterialTextView = findViewById(R.id.deviceImei)
         val deviceModelView: MaterialTextView = findViewById(R.id.deviceModel)
         val contactNumberView: MaterialTextView = findViewById(R.id.contactNumber)
+        val androidIdView: MaterialTextView = findViewById(R.id.androidId) // Add a view for Android ID
         val traceLocationButton: MaterialButton = findViewById(R.id.traceLocationButton)
         val threeDots: ImageView = findViewById(R.id.threeDots)
         val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
@@ -41,17 +41,16 @@ class DeviceDetailsActivity : AppCompatActivity() {
         // Display the IMEI from the previous activity
         deviceImeiView.text = imeiFromPreviousActivity
 
-        // Fetch FCM Token programmatically
+        // Fetch Android ID and display it
+        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        androidIdView.text = androidId
 
         // Show the progress bar
         progressBar.visibility = View.VISIBLE
 
-        // Fetch the device details from Firestore using the FCM token
+        // Fetch the device details from Firestore using the IMEI
         firestore.collection("device")
-            .whereEqualTo(
-                "serialNumber",
-                imeiFromPreviousActivity
-            ) // Use FCM token to query the device
+            .whereEqualTo("serialNumber", imeiFromPreviousActivity)
             .get()
             .addOnSuccessListener { result ->
                 progressBar.visibility = View.GONE
@@ -64,6 +63,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 // Assuming there is only one result
                 val document = result.documents[0]
                 val documentId = document.id
+                val androidd = document.getString("androidId") ?: "unknown"
                 val deviceName = document.getString("deviceName") ?: "Unknown"
                 val fcmtoken = document.getString("fcmToken") ?: "Unknown"
                 val deviceType = document.getString("deviceType") ?: "Unknown"
@@ -79,7 +79,8 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 // Set the Trace Location button action
                 traceLocationButton.setOnClickListener {
                     val intent = Intent(this, LocationTrackActivity::class.java)
-                    intent.putExtra("fcmToken", fcmtoken)  // Pass FCM token as extra
+                    intent.putExtra("fcmToken", fcmtoken)
+                    intent.putExtra("androidId", androidd)
                     startActivity(intent)
                 }
 
@@ -112,8 +113,8 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
-
     }
+
     private fun removeDevice(fcmtoken: String?) {
         if (fcmtoken.isNullOrEmpty()) {
             Toast.makeText(this, "FCM Token not provided.", Toast.LENGTH_SHORT).show()
@@ -125,7 +126,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
 
         // Fetch the device document from Firestore and delete it
         firestore.collection("device")
-            .whereEqualTo("fcmToken", fcmtoken) // Use FCM token to fetch the device document
+            .whereEqualTo("fcmToken", fcmtoken)
             .get()
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
@@ -157,6 +158,3 @@ class DeviceDetailsActivity : AppCompatActivity() {
             }
     }
 }
-
-
-

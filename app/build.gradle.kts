@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.osmdroid.wms)
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.media3.common.ktx)
 
     // Testing libraries
     testImplementation(libs.junit)

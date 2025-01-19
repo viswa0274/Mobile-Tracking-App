@@ -223,11 +223,18 @@ class DashboardActivity : AppCompatActivity() {
             }
     }
 
+    @SuppressLint("HardwareIds", "MissingPermission")
     private fun saveDeviceLocation(serialNumber: String, fcmToken: String?) {
         if (fcmToken == null) {
             Toast.makeText(this, "FCM Token is missing, cannot save location", Toast.LENGTH_SHORT).show()
             return
         }
+
+        // Fetch the Android ID
+        val androidId = android.provider.Settings.Secure.getString(
+            contentResolver,
+            android.provider.Settings.Secure.ANDROID_ID
+        )
 
         // Check for location permission
         if (ActivityCompat.checkSelfPermission(
@@ -247,26 +254,28 @@ class DashboardActivity : AppCompatActivity() {
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             val locationData = if (location == null) {
                 hashMapOf(
+                    "fcmToken" to fcmToken,
+                    "androidId" to androidId,
                     "location" to null,
                     "lastUpdated" to System.currentTimeMillis()
-                     // Save FCM token here
                 )
             } else {
                 hashMapOf(
+                    "fcmToken" to fcmToken,
+                    "androidId" to androidId,
                     "location" to GeoPoint(location.latitude, location.longitude),
                     "lastUpdated" to System.currentTimeMillis()
-
                 )
             }
 
             firestore.collection("device_locations")
-                .document(fcmToken) // Use fcmToken as document ID
+                .document(androidId) // Use androidId as document ID
                 .set(locationData)
                 .addOnSuccessListener {
                     val message = if (location == null) {
-                        "Device location (null) and FCM token saved successfully"
+                        "Device location (null) and FCM token saved successfully with Android ID"
                     } else {
-                        "Device location and FCM token saved successfully"
+                        "Device location and FCM token saved successfully with Android ID"
                     }
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
                 }
@@ -279,3 +288,4 @@ class DashboardActivity : AppCompatActivity() {
     }
 
 }
+
