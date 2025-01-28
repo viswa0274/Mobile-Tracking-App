@@ -1,7 +1,11 @@
 package com.example.tracking
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
+import android.media.MediaPlayer
+import android.media.RingtoneManager
 import android.os.Bundle
 import android.provider.Settings
 import android.view.MenuItem
@@ -14,10 +18,16 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.textview.MaterialTextView
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
+import android.os.Vibrator
+import android.widget.LinearLayout
+import android.widget.PopupWindow
+import androidx.core.content.ContextCompat
 
 class DeviceDetailsActivity : AppCompatActivity() {
 
     private val firestore = FirebaseFirestore.getInstance()
+    private var mediaPlayer: MediaPlayer? = null
 
     @SuppressLint("SetTextI18n", "WrongViewCast", "HardwareIds", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,8 +40,9 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val deviceImeiView: MaterialTextView = findViewById(R.id.deviceImei)
         val deviceModelView: MaterialTextView = findViewById(R.id.deviceModel)
         val contactNumberView: MaterialTextView = findViewById(R.id.contactNumber)
-        val androidIdView: MaterialTextView = findViewById(R.id.androidId) // Add a view for Android ID
+        val androidIdView: MaterialTextView = findViewById(R.id.androidId)
         val traceLocationButton: MaterialButton = findViewById(R.id.traceLocationButton)
+        val triggerAlarmButton: MaterialButton = findViewById(R.id.triggerAlarmButton)
         val threeDots: ImageView = findViewById(R.id.threeDots)
         val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
 
@@ -84,6 +95,11 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
 
+                triggerAlarmButton.setOnClickListener {
+                    triggerAlarm(fcmtoken)
+                    showStopAlarmPopup(fcmtoken)  // Show the stop alarm popup when alarm is triggered
+                }
+
                 // Set up the three dots (popup menu)
                 threeDots.setOnClickListener { view ->
                     val popupMenu = PopupMenu(this, view)
@@ -93,7 +109,6 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     popupMenu.setOnMenuItemClickListener { item: MenuItem ->
                         when (item.itemId) {
                             R.id.removeDevice -> {
-                                // Handle the remove device action here
                                 removeDevice(fcmtoken)
                                 true
                             }
@@ -107,13 +122,130 @@ class DeviceDetailsActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 progressBar.visibility = View.GONE
-                Toast.makeText(
-                    this,
-                    "Error fetching device details: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, "Error fetching device details: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
+    @SuppressLint("MissingInflatedId")
+    //@SuppressLint("InflateParams")
+    private fun showStopAlarmPopup(fcmtoken: String) {
+        val layoutInflater = layoutInflater
+        val view = layoutInflater.inflate(R.layout.dialog_stop_alarm, null)
+        val popupWindow = PopupWindow(view, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT, true)
+
+        // Set up the stop alarm button within the popup
+        val stopButton: MaterialButton = view.findViewById(R.id.stopAlarmButton)
+        stopButton.setOnClickListener {
+            stopAlarm(fcmtoken)
+            popupWindow.dismiss()  // Dismiss the popup when clicked
+        }
+
+        // Show the popup at the center of the screen
+        popupWindow.showAtLocation(findViewById(android.R.id.content), 0, 0, 0)
+    }
+
+
+    private fun stopAlarm(fcmtoken: String?) {
+        if (fcmtoken.isNullOrEmpty()) {
+            Toast.makeText(this, "FCM Token not provided.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
+        progressBar.visibility = View.VISIBLE
+
+        mediaPlayer?.let {
+            if (it.isPlaying) {
+                it.stop()
+                it.release()
+            }
+        }
+
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager.abandonAudioFocus(null)
+
+        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        vibrator.cancel()
+
+        progressBar.visibility = View.GONE
+        Toast.makeText(this, "Alarm stopped", Toast.LENGTH_SHORT).show()
+
+        firestore.collection("alarms")
+            .document(fcmtoken!!)
+            .set(mapOf("alarm" to false))
+            .addOnSuccessListener {}
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Failed to stop alarm: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun triggerAlarm(fcmToken: String) {
+        val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
+        progressBar.visibility = View.VISIBLE
+
+        firestore.collection("device")
+            .whereEqualTo("serialNumber", intent.getStringExtra("deviceImei") ?: "Unknown IMEI")
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    progressBar.visibility = View.GONE
+                    Toast.makeText(this, "Device not found in Firestore.", Toast.LENGTH_SHORT).show()
+                    return@addOnSuccessListener
+                }
+
+                val document = result.documents[0]
+                val storedFcmToken = document.getString("fcmToken") ?: ""
+
+                FirebaseMessaging.getInstance().token
+                    .addOnCompleteListener { task ->
+                        if (!task.isSuccessful) {
+                            progressBar.visibility = View.GONE
+                            Toast.makeText(this, "Failed to get FCM token.", Toast.LENGTH_SHORT).show()
+                            return@addOnCompleteListener
+                        }
+
+                        val currentFcmToken = task.result
+
+                        if (storedFcmToken == currentFcmToken) {
+                            firestore.collection("alarms")
+                                .document(fcmToken)
+                                .set(mapOf("alarm" to true))
+                                .addOnSuccessListener {
+                                    progressBar.visibility = View.GONE
+                                    Toast.makeText(this, "Alarm triggered successfully!", Toast.LENGTH_SHORT).show()
+                                    playAlarmSound()
+
+                                    // Start the AlarmForegroundService to listen for changes
+                                    val intent = Intent(this, AlarmForegroundService::class.java).apply {
+                                        putExtra("fcmToken", fcmToken) // Pass FCM token to the service
+                                    }
+                                    ContextCompat.startForegroundService(this, intent) // Start the service
+                                }
+                                .addOnFailureListener { e ->
+                                    progressBar.visibility = View.GONE
+                                    Toast.makeText(this, "Failed to trigger alarm: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                        } else {
+                            firestore.collection("alarms")
+                                .document(storedFcmToken)
+                                .set(mapOf("alarm" to true))
+                                .addOnSuccessListener {
+                                    progressBar.visibility = View.GONE
+                                    Toast.makeText(this, "Triggering Alarm", Toast.LENGTH_SHORT).show()
+                                }
+                                .addOnFailureListener { e ->
+                                    progressBar.visibility = View.GONE
+                                    Toast.makeText(this, "Failed to set alarm: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                        }
+                    }
+            }
+            .addOnFailureListener { e ->
+                progressBar.visibility = View.GONE
+                Toast.makeText(this, "Error fetching device details: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
 
     private fun removeDevice(fcmtoken: String?) {
         if (fcmtoken.isNullOrEmpty()) {
@@ -124,7 +256,6 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
         progressBar.visibility = View.VISIBLE
 
-        // Fetch the device document from Firestore and delete it
         firestore.collection("device")
             .whereEqualTo("fcmToken", fcmtoken)
             .get()
@@ -135,17 +266,15 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
 
-                // Assuming the document exists and we can delete it
                 val document = result.documents[0]
                 val documentId = document.id
 
-                // Remove the device from Firestore
                 firestore.collection("device").document(documentId)
                     .delete()
                     .addOnSuccessListener {
                         progressBar.visibility = View.GONE
                         Toast.makeText(this, "Device removed successfully.", Toast.LENGTH_SHORT).show()
-                        finish() // Close the activity after removal
+                        finish()
                     }
                     .addOnFailureListener { e ->
                         progressBar.visibility = View.GONE
@@ -154,7 +283,16 @@ class DeviceDetailsActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 progressBar.visibility = View.GONE
-                Toast.makeText(this, "Error fetching device details: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error removing device: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    private fun playAlarmSound() {
+        val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+        mediaPlayer = MediaPlayer.create(this, ringtoneUri)
+        mediaPlayer?.start()
+
+        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        vibrator.vibrate(longArrayOf(0, 1000, 1000), 0)
     }
 }

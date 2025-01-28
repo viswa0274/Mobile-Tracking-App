@@ -15,12 +15,18 @@
         android:layout_gravity="center"
         android:indeterminate="true" />
 
-    <!-- Layout for devices will be populated dynamically -->
-    <LinearLayout
-        android:id="@+id/devicesLayout"
+    <!-- ScrollView to make the list of devices scrollable -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp">
+
+        <!-- Layout for devices will be populated dynamically -->
+        <LinearLayout
+            android:id="@+id/devicesLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
 
 </LinearLayout>

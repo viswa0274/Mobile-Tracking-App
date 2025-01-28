@@ -59,7 +59,7 @@ class ViewDevicesActivity : AppCompatActivity() {
 
                 // Iterate through the fetched devices and create the design
                 for (document in result) {
-                    val deviceName = document.getString("deviceName") ?: "Unknown Device"
+                    val deviceName = document.getString("model") ?: "Unknown Device"
                     val deviceType = document.getString("deviceType") ?: "Unknown Type"
                     val imei = document.getString("serialNumber") ?: ""  // Fetch serialNumber here
 
@@ -67,7 +67,7 @@ class ViewDevicesActivity : AppCompatActivity() {
                     val deviceView = layoutInflater.inflate(R.layout.device_item, devicesLayout, false)
 
                     // Set the device name and type
-                    deviceView.findViewById<TextView>(R.id.deviceName).text = "Device Name: $deviceName"
+                    deviceView.findViewById<TextView>(R.id.deviceName).text = "Device Model: $deviceName"
                     //deviceView.findViewById<TextView>(R.id.deviceType).text = "imee: $imei"
                     // Set the device image based on type
                     val deviceImage = deviceView.findViewById<ImageView>(R.id.deviceImage)

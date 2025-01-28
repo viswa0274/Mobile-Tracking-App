@@ -41,7 +41,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-
+    implementation(libs.okhttp)
     // Firebase dependencies
     implementation(platform(libs.firebase.bom)) // Firebase BOM
     implementation(libs.firebase.database)
@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.media3.common.ktx)
+    implementation(libs.volley)
+    implementation(libs.firebase.messaging)
 
     // Testing libraries
     testImplementation(libs.junit)

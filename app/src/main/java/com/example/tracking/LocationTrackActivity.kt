@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.provider.Settings
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.location.LocationServices
@@ -25,6 +26,7 @@ class LocationTrackActivity : AppCompatActivity() {
     @SuppressLint("HardwareIds")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("LocationTrackActivity", "onCreate called")
         Configuration.getInstance().load(applicationContext, getPreferences(MODE_PRIVATE))
         setContentView(R.layout.activity_locationtrack)
 
@@ -32,7 +34,10 @@ class LocationTrackActivity : AppCompatActivity() {
         map = findViewById(R.id.map)
         map.setTileSource(TileSourceFactory.MAPNIK)
         map.setMultiTouchControls(true)
+
+        // Start foreground service to update location
         startForegroundService()
+
         // Fetch androidId from Settings.Secure
         val secureAndroidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
 
@@ -54,8 +59,15 @@ class LocationTrackActivity : AppCompatActivity() {
             fetchAndDisplayLocation(intentAndroidId)
         }
     }
-    private fun startForegroundService() {
+
+    private fun startForegroundService(intentFcmToken: String? = null) {
         val intent = Intent(this, LocationForegroundService::class.java)
+
+        // Pass the FCM token to the foreground service
+        if (intentFcmToken != null) {
+            intent.putExtra("fcmToken", intentFcmToken)
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {
@@ -127,10 +139,6 @@ class LocationTrackActivity : AppCompatActivity() {
             }
     }
 
-
-
-
-
     private fun updateMap(latitude: Double, longitude: Double) {
         val geoPoint = OsmGeoPoint(latitude, longitude)
         map.controller.setZoom(15.0)
@@ -144,14 +152,15 @@ class LocationTrackActivity : AppCompatActivity() {
         map.invalidate() // Refresh the map
     }
 
-
     override fun onResume() {
         super.onResume()
+        Log.d("LocationTrackActivity", "onResume called")
         map.onResume()
     }
 
     override fun onPause() {
         super.onPause()
+        Log.d("LocationTrackActivity", "onPause called")
         map.onPause()
     }
 }
