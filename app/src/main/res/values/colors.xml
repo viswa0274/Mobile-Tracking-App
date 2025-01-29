@@ -5,7 +5,9 @@
     <color name="red">#F44336</color>
     <color name="green">#4CAF50</color>
     <color name="burgundy">#800020</color>
+    <color name="colorAccent">#FF4081</color> <!-- Bright Pink/Coral -->
     <color name="navy">#000080</color>
+    <color name="colorPrimary">#6200EE</color>
     <color name="cardBackgroundColor">#F5F5F5</color> <!-- Soft light gray -->
     <color name="rowBackgroundColor">#E0F7FA</color> <!-- Light cyan -->
     <color name="textPrimaryColor">#00796B</color> <!-- Teal -->

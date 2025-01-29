@@ -273,15 +273,16 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:orientation="horizontal">
+
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/simChangeDetectionButton"
+                    android:id="@+id/setGeofenceButton"
                     android:layout_width="0dp"
                     android:layout_height="60dp"
-                    android:layout_weight="1"
                     android:layout_margin="4dp"
+                    android:layout_weight="1"
                     android:backgroundTint="@color/buttonBackground"
                     android:fontFamily="sans-serif-medium"
-                    android:text="SIM Change Detection"
+                    android:text="Set Geofence"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="16sp" />

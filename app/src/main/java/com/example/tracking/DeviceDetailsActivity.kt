@@ -43,6 +43,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val androidIdView: MaterialTextView = findViewById(R.id.androidId)
         val traceLocationButton: MaterialButton = findViewById(R.id.traceLocationButton)
         val triggerAlarmButton: MaterialButton = findViewById(R.id.triggerAlarmButton)
+        val setGeofenceButton: MaterialButton = findViewById(R.id.setGeofenceButton)
         val threeDots: ImageView = findViewById(R.id.threeDots)
         val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
 
@@ -93,6 +94,10 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     intent.putExtra("fcmToken", fcmtoken)
                     intent.putExtra("androidId", androidd)
                     startActivity(intent)
+                }
+                setGeofenceButton.setOnClickListener {
+                    val geofenceHelper = GeofenceHelper(this)
+                    geofenceHelper.showGeofencePopup(this, androidd, imeiFromPreviousActivity)
                 }
 
                 triggerAlarmButton.setOnClickListener {
@@ -213,7 +218,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
                                 .addOnSuccessListener {
                                     progressBar.visibility = View.GONE
                                     Toast.makeText(this, "Alarm triggered successfully!", Toast.LENGTH_SHORT).show()
-                                    playAlarmSound()
+                                    //playAlarmSound()
 
                                     // Start the AlarmForegroundService to listen for changes
                                     val intent = Intent(this, AlarmForegroundService::class.java).apply {
@@ -287,12 +292,6 @@ class DeviceDetailsActivity : AppCompatActivity() {
             }
     }
 
-    private fun playAlarmSound() {
-        val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        mediaPlayer = MediaPlayer.create(this, ringtoneUri)
-        mediaPlayer?.start()
 
-        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        vibrator.vibrate(longArrayOf(0, 1000, 1000), 0)
-    }
+
 }

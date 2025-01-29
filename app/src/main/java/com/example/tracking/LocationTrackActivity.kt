@@ -60,13 +60,14 @@ class LocationTrackActivity : AppCompatActivity() {
         }
     }
 
-    private fun startForegroundService(intentFcmToken: String? = null) {
-        val intent = Intent(this, LocationForegroundService::class.java)
 
-        // Pass the FCM token to the foreground service
-        if (intentFcmToken != null) {
-            intent.putExtra("fcmToken", intentFcmToken)
-        }
+    private fun startForegroundService() {
+        val intent = Intent(this, LocationForegroundService::class.java)
+        val intentAndroidId = intent.getStringExtra("androidId")
+        val intentFcmToken = intent.getStringExtra("fcmToken")
+        // Pass androidId and fcmToken to the foreground service
+        intentAndroidId?.let { intent.putExtra("androidId", it) }
+        intentFcmToken?.let { intent.putExtra("fcmToken", it) }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
