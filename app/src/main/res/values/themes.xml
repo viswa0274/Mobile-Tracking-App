@@ -6,4 +6,13 @@
     </style>
 
     <style name="Theme.Tracking" parent="Base.Theme.Tracking" />
+
+    <style name="Theme.Tracking.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.Tracking.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.Tracking.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>

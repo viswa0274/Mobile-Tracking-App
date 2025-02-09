@@ -34,6 +34,9 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    buildFeatures {
+        viewBinding = true
+    }
 }
 dependencies {
     implementation(libs.androidx.core.ktx)
@@ -59,6 +62,11 @@ dependencies {
     implementation(libs.androidx.media3.common.ktx)
     implementation(libs.volley)
     implementation(libs.firebase.messaging)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.navigation.runtime.ktx)
 
     // Testing libraries
     testImplementation(libs.junit)

@@ -1,6 +1,7 @@
 package com.example.tracking
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
@@ -8,6 +9,11 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
@@ -17,6 +23,7 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint as OsmGeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import java.util.concurrent.TimeUnit
 
 class LocationTrackActivity : AppCompatActivity() {
 
@@ -29,7 +36,7 @@ class LocationTrackActivity : AppCompatActivity() {
         Log.d("LocationTrackActivity", "onCreate called")
         Configuration.getInstance().load(applicationContext, getPreferences(MODE_PRIVATE))
         setContentView(R.layout.activity_locationtrack)
-
+        scheduleSimCheck(this)
         // Initialize the MapView
         map = findViewById(R.id.map)
         map.setTileSource(TileSourceFactory.MAPNIK)
@@ -60,7 +67,22 @@ class LocationTrackActivity : AppCompatActivity() {
         }
     }
 
+    fun scheduleSimCheck(context: Context) {
+        val workRequest = PeriodicWorkRequestBuilder<SimChangeWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)  // Only run when connected to the internet
+                    .setRequiresBatteryNotLow(true)  // Avoid running when battery is low
+                    .build()
+            )
+            .build()
 
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "SimCheckWorker",
+            ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
+    }
     private fun startForegroundService() {
         val intent = Intent(this, LocationForegroundService::class.java)
         val intentAndroidId = intent.getStringExtra("androidId")

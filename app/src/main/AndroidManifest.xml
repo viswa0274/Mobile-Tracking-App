@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-feature
         android:name="android.hardware.telephony"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false"
+        tools:ignore="DuplicateUsesFeature" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-feature android:name="android.hardware.telephony" android:required="false"
-        tools:ignore="DuplicateUsesFeature" />
     <uses-permission android:name="android.permission.SEND_SMS" />
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -34,7 +37,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Tracking"
         tools:targetApi="31">
-
+        <activity
+            android:name=".MainActivity2"
+            android:exported="false"
+            android:label="@string/title_activity_main2"
+            android:theme="@style/Theme.Tracking.NoActionBar" />
         <!-- Receiver for device boot -->
         <receiver
             android:name=".BootBroadcastReceiver"
@@ -42,36 +49,33 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
 
         <service
             android:name=".LocationForegroundService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false"
             android:foregroundServiceType="location"
+            android:permission="android.permission.BIND_JOB_SERVICE"
             tools:ignore="ForegroundServicePermission" />
-        <service android:name=".AlarmForegroundService" android:permission="android.permission.FOREGROUND_SERVICE"/>
-
-        <!-- Location Service -->
+        <service
+            android:name=".AlarmForegroundService"
+            android:permission="android.permission.FOREGROUND_SERVICE" /> <!-- Location Service -->
         <service
             android:name=".LocationService"
-            android:foregroundServiceType="location"
             android:enabled="true"
             android:exported="false"
-            tools:ignore="ForegroundServicePermission" />
-
-        <!-- Activity Declarations -->
+            android:foregroundServiceType="location"
+            tools:ignore="ForegroundServicePermission" /> <!-- Activity Declarations -->
         <activity
             android:name=".LocationTrackActivity"
             android:exported="false"
             tools:ignore="MissingClass" />
         <activity
             android:name=".DeviceDetailsActivity"
-            android:exported="false">
-        </activity>
-
+            android:exported="false"></activity>
         <activity
             android:name=".ViewDevicesActivity"
             android:exported="false" />
@@ -90,8 +94,10 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>
+
 </manifest>

@@ -19,7 +19,7 @@
             android:layout_height="40dp"
             android:layout_gravity="end"
             android:src="@drawable/option"
-        android:contentDescription="More options" />
+            android:contentDescription="More options" />
 
         <!-- Progress Indicator -->
         <com.google.android.material.progressindicator.CircularProgressIndicator

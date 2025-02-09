@@ -1,13 +1,22 @@
 package com.example.tracking
 
+
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.*
+import java.util.concurrent.TimeUnit
+import androidx.work.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import android.app.NotificationManager
+import android.provider.Settings
+import android.telephony.TelephonyManager
 import com.google.android.gms.location.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
@@ -21,6 +30,7 @@ class DashboardActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
 
         // Initialize SessionManager
         sessionManager = SessionManager(this)
@@ -64,6 +74,8 @@ class DashboardActivity : AppCompatActivity() {
             intent.putExtra("userId", uid) // Pass userId to the next activity
             startActivity(intent)
         }
+        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        //fetchDeviceDetails(androidId)
     }
 
     @SuppressLint("SetTextI18n", "MissingInflatedId", "HardwareIds")
@@ -288,4 +300,5 @@ class DashboardActivity : AppCompatActivity() {
     }
 
 }
+
 
