@@ -42,9 +42,9 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val deviceModelView: MaterialTextView = findViewById(R.id.deviceModel)
         val contactNumberView: MaterialTextView = findViewById(R.id.contactNumber)
         val androidIdView: MaterialTextView = findViewById(R.id.androidId)
-        val traceLocationButton: MaterialButton = findViewById(R.id.traceLocationButton)
-        val triggerAlarmButton: MaterialButton = findViewById(R.id.triggerAlarmButton)
-        val setGeofenceButton: MaterialButton = findViewById(R.id.setGeofenceButton)
+        val triggerAlarmLayout: LinearLayout = findViewById(R.id.triggerAlarmLayout)
+        val trackLocationLayout: LinearLayout = findViewById(R.id.trackLocationLayout)
+        val setGeofenceLayout: LinearLayout = findViewById(R.id.setGeofenceLayout)
         val threeDots: ImageView = findViewById(R.id.threeDots)
         val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
 
@@ -90,18 +90,18 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 contactNumberView.text = contactNumber
 
                 // Set the Trace Location button action
-                traceLocationButton.setOnClickListener {
+                trackLocationLayout.setOnClickListener {
                     val intent = Intent(this, LocationTrackActivity::class.java)
                     intent.putExtra("fcmToken", fcmtoken)
                     intent.putExtra("androidId", androidd)
                     startActivity(intent)
                 }
-                setGeofenceButton.setOnClickListener {
+                setGeofenceLayout.setOnClickListener {
                     val geofenceHelper = GeofenceHelper(this)
                     geofenceHelper.showGeofencePopup(this, androidd, imeiFromPreviousActivity)
                 }
 
-                triggerAlarmButton.setOnClickListener {
+                triggerAlarmLayout.setOnClickListener {
                     triggerAlarm(fcmtoken)
                     showStopAlarmPopup(fcmtoken)  // Show the stop alarm popup when alarm is triggered
                 }

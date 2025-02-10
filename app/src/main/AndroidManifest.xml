@@ -37,11 +37,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Tracking"
         tools:targetApi="31">
-        <activity
-            android:name=".MainActivity2"
-            android:exported="false"
-            android:label="@string/title_activity_main2"
-            android:theme="@style/Theme.Tracking.NoActionBar" />
+
         <!-- Receiver for device boot -->
         <receiver
             android:name=".BootBroadcastReceiver"
@@ -75,7 +71,8 @@
             tools:ignore="MissingClass" />
         <activity
             android:name=".DeviceDetailsActivity"
-            android:exported="false"></activity>
+            android:exported="false">
+        </activity>
         <activity
             android:name=".ViewDevicesActivity"
             android:exported="false" />

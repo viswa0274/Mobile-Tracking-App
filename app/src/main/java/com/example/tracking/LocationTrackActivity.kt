@@ -72,7 +72,7 @@ class LocationTrackActivity : AppCompatActivity() {
             .setConstraints(
                 Constraints.Builder()
                     .setRequiredNetworkType(NetworkType.CONNECTED)  // Only run when connected to the internet
-                    .setRequiresBatteryNotLow(true)  // Avoid running when battery is low
+                    .setRequiresBatteryNotLow(false)  // Avoid running when battery is low
                     .build()
             )
             .build()
