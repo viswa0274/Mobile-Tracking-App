@@ -2,12 +2,14 @@ package com.example.tracking
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 
 class SignInActivity : AppCompatActivity() {
 
@@ -16,6 +18,7 @@ class SignInActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_sign_in)
 
         // Initialize Firestore and SessionManager
@@ -37,6 +40,8 @@ class SignInActivity : AppCompatActivity() {
             }
         }
     }
+    // This function subscribes the current device to the 'sim_change_alert' topic
+
 
     private fun verifyUser(email: String, enteredPassword: String) {
         firestore.collection("users")

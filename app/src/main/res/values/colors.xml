@@ -7,7 +7,16 @@
     <color name="burgundy">#800020</color>
     <color name="colorAccent">#FF4081</color> <!-- Bright Pink/Coral -->
     <color name="navy">#000080</color>
-    <color name="colorPrimary">#6200EE</color>
+    <color name="Colors">#FF6200EE</color> <!-- A vibrant purple shade for buttons -->
+
+    <color name="buttonColor">#FF6F00</color>
+    <color name="lightBackground">#F5F5F5</color>  <!-- Light Background -->
+    <color name="cementGrey">#E0E0E0</color>  <!-- Soft Cement Grey -->
+    <color name="lightGrey">#F5F5F5</color>  <!-- Light Card Background -->
+    <color name="darkGrey">#757575</color>  <!-- Subtle Border Color -->
+    <color name="primaryColors">#FF6F00</color>  <!-- Vibrant Orange Accent -->
+
+    <!-- Replace with your preferred color -->
     <color name="cardBackgroundColor">#F5F5F5</color> <!-- Soft light gray -->
     <color name="rowBackgroundColor">#E0F7FA</color> <!-- Light cyan -->
     <color name="textPrimaryColor">#00796B</color> <!-- Teal -->

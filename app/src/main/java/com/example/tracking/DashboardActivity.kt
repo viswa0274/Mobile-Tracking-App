@@ -20,6 +20,7 @@ import android.telephony.TelephonyManager
 import com.google.android.gms.location.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.messaging.FirebaseMessaging
 
 class DashboardActivity : AppCompatActivity() {
 
@@ -30,7 +31,7 @@ class DashboardActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        subscribeToSimChangeTopic()
 
         // Initialize SessionManager
         sessionManager = SessionManager(this)
@@ -234,7 +235,16 @@ class DashboardActivity : AppCompatActivity() {
                 Toast.makeText(this, "Error adding device: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-
+    fun subscribeToSimChangeTopic() {
+        FirebaseMessaging.getInstance().subscribeToTopic("sim_change_alert")
+            .addOnCompleteListener { task ->
+                var msg = "Subscribed to topic"
+                if (!task.isSuccessful) {
+                    msg = "Subscription failed"
+                }
+                Log.d("SimChangeWorker", msg)  // Log subscription status
+            }
+    }
     @SuppressLint("HardwareIds", "MissingPermission")
     private fun saveDeviceLocation(serialNumber: String, fcmToken: String?) {
         if (fcmToken == null) {
