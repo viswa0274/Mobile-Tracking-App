@@ -31,7 +31,7 @@ class DashboardActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        subscribeToSimChangeTopic()
+       // subscribeToSimChangeTopic()
 
         // Initialize SessionManager
         sessionManager = SessionManager(this)
@@ -235,7 +235,7 @@ class DashboardActivity : AppCompatActivity() {
                 Toast.makeText(this, "Error adding device: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-    fun subscribeToSimChangeTopic() {
+    /*fun subscribeToSimChangeTopic() {
         FirebaseMessaging.getInstance().subscribeToTopic("sim_change_alert")
             .addOnCompleteListener { task ->
                 var msg = "Subscribed to topic"
@@ -244,7 +244,7 @@ class DashboardActivity : AppCompatActivity() {
                 }
                 Log.d("SimChangeWorker", msg)  // Log subscription status
             }
-    }
+    }*/
     @SuppressLint("HardwareIds", "MissingPermission")
     private fun saveDeviceLocation(serialNumber: String, fcmToken: String?) {
         if (fcmToken == null) {
