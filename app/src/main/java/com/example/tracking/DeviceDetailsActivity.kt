@@ -21,6 +21,7 @@ import com.google.android.material.textview.MaterialTextView
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import android.os.Vibrator
+import android.telephony.TelephonyManager
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.core.content.ContextCompat
@@ -35,12 +36,14 @@ class DeviceDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_device_details)
 
+
         // Initialize views as per the provided XML layout
         val deviceNameView: MaterialTextView = findViewById(R.id.deviceName)
         val deviceTypeView: MaterialTextView = findViewById(R.id.deviceType)
         val deviceImeiView: MaterialTextView = findViewById(R.id.deviceImei)
         val deviceModelView: MaterialTextView = findViewById(R.id.deviceModel)
         val contactNumberView: MaterialTextView = findViewById(R.id.contactNumber)
+       // val simChangedView: MaterialTextView = findViewById(R.id.simchanged)
         val androidIdView: MaterialTextView = findViewById(R.id.androidId)
         val triggerAlarmLayout: LinearLayout = findViewById(R.id.triggerAlarmLayout)
         val trackLocationLayout: LinearLayout = findViewById(R.id.trackLocationLayout)
@@ -79,13 +82,15 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 val androidd = document.getString("androidId") ?: "unknown"
                 val deviceName = document.getString("deviceName") ?: "Unknown"
                 val fcmtoken = document.getString("fcmToken") ?: "Unknown"
+                //val simchange = document.getBoolean("simChanged") ?: false // Fetch simChanged as Boolean
                 val deviceType = document.getString("deviceType") ?: "Unknown"
                 val deviceModel = document.getString("model") ?: "Unknown"
                 val contactNumber = document.getString("contactNumber") ?: "Not Available"
-
+                //checkSimChange(androidd)
                 // Populate the views in a tabular format
                 deviceNameView.text = deviceName
                 deviceTypeView.text = deviceType
+                //simChangedView.text = simchange.toString()
                 deviceModelView.text = deviceModel
                 contactNumberView.text = contactNumber
 
@@ -131,6 +136,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 Toast.makeText(this, "Error fetching device details: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 
     @SuppressLint("MissingInflatedId")
     //@SuppressLint("InflateParams")

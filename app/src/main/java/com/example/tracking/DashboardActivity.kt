@@ -181,6 +181,7 @@ class DashboardActivity : AppCompatActivity() {
                                     "serialNumber" to serialNumber,
                                     "contactNumber" to contactNumber,
                                     "userId" to userId,
+                                    "simChanged" to "false",
                                     "androidId" to androidId
                                 )
                                 if (fcmToken != null) {
