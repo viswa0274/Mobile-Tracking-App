@@ -174,16 +174,17 @@ class DashboardActivity : AppCompatActivity() {
                             if (!fcmDocs.isEmpty) {
                                 Toast.makeText(this, "Device with this FCM token already exists", Toast.LENGTH_SHORT).show()
                             } else {
-                                val deviceData = hashMapOf(
+                                val deviceData = hashMapOf<String, Any>(  // ✅ Change made here
                                     "deviceName" to deviceName,
                                     "deviceType" to deviceType,
                                     "model" to model,
                                     "serialNumber" to serialNumber,
                                     "contactNumber" to contactNumber,
                                     "userId" to userId,
-                                    "simChanged" to "false",
+                                    "simChanged" to false,  // ✅ Now accepted as Any (Boolean)
                                     "androidId" to androidId
                                 )
+
                                 if (fcmToken != null) {
                                     deviceData["fcmToken"] = fcmToken
                                 }
@@ -199,15 +200,17 @@ class DashboardActivity : AppCompatActivity() {
                             ).show()
                         }
                 } else {
-                    val deviceData = hashMapOf(
+                    val deviceData = hashMapOf<String, Any>(  // ✅ Change made here
                         "deviceName" to deviceName,
                         "deviceType" to deviceType,
                         "model" to model,
                         "serialNumber" to serialNumber,
                         "contactNumber" to contactNumber,
                         "userId" to userId,
+                        "simChanged" to false,  // ✅ Now accepted as Any (Boolean)
                         "androidId" to androidId
                     )
+
                     addDeviceToFirestore(deviceData, serialNumber, dialog, null)
                 }
             }
@@ -217,7 +220,7 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun addDeviceToFirestore(
-        deviceData: HashMap<String, String>,
+        deviceData: HashMap<String, Any>,
         serialNumber: String,
         dialog: AlertDialog,
         fcmToken: String?
