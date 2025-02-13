@@ -3,6 +3,7 @@ package com.example.tracking
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
@@ -43,7 +44,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val deviceImeiView: MaterialTextView = findViewById(R.id.deviceImei)
         val deviceModelView: MaterialTextView = findViewById(R.id.deviceModel)
         val contactNumberView: MaterialTextView = findViewById(R.id.contactNumber)
-       // val simChangedView: MaterialTextView = findViewById(R.id.simchanged)
+       val simChangedView: MaterialTextView = findViewById(R.id.simchanged)
         val androidIdView: MaterialTextView = findViewById(R.id.androidId)
         val triggerAlarmLayout: LinearLayout = findViewById(R.id.triggerAlarmLayout)
         val trackLocationLayout: LinearLayout = findViewById(R.id.trackLocationLayout)
@@ -82,7 +83,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 val androidd = document.getString("androidId") ?: "unknown"
                 val deviceName = document.getString("deviceName") ?: "Unknown"
                 val fcmtoken = document.getString("fcmToken") ?: "Unknown"
-                //val simchange = document.getBoolean("simChanged") ?: false // Fetch simChanged as Boolean
+                val simChanged = document.get("simChanged")?.toString()?.toBoolean() ?: false
                 val deviceType = document.getString("deviceType") ?: "Unknown"
                 val deviceModel = document.getString("model") ?: "Unknown"
                 val contactNumber = document.getString("contactNumber") ?: "Not Available"
@@ -93,7 +94,9 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 //simChangedView.text = simchange.toString()
                 deviceModelView.text = deviceModel
                 contactNumberView.text = contactNumber
-
+                // Color for clarity
+                simChangedView.text = if (simChanged) "SIM Changed" else "SIM Unchanged"
+                simChangedView.setTextColor(if (simChanged) Color.RED else Color.GREEN)
                 // Set the Trace Location button action
                 trackLocationLayout.setOnClickListener {
                     val intent = Intent(this, LocationTrackActivity::class.java)
