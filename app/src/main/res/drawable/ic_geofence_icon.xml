@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/ic_geofence_icon.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path android:fillColor="#ffffff" android:pathData="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2ZM12,19C7.03,19 4,15.97 4,12C4,8.03 7.03,5 12,5C16.97,5 20,8.03 20,12C20,15.97 16.97,19 12,19ZM12,7C10.9,7 10,7.9 10,9V13H9C8.45,13 8,13.45 8,14C8,14.55 8.45,15 9,15H10V17C10,17.55 10.45,18 11,18C11.55,18 12,17.55 12,17V15H13C13.55,15 14,14.55 14,14C14,13.45 13.55,13 13,13H12V9C12,7.9 11.1,7 10,7Z"/>
+</vector>

@@ -181,7 +181,7 @@ class DashboardActivity : AppCompatActivity() {
                                     "serialNumber" to serialNumber,
                                     "contactNumber" to contactNumber,
                                     "userId" to userId,
-                                    "simChanged" to false,  // ✅ Now accepted as Any (Boolean)
+
                                     "androidId" to androidId
                                 )
 
@@ -207,7 +207,7 @@ class DashboardActivity : AppCompatActivity() {
                         "serialNumber" to serialNumber,
                         "contactNumber" to contactNumber,
                         "userId" to userId,
-                        "simChanged" to false,  // ✅ Now accepted as Any (Boolean)
+
                         "androidId" to androidId
                     )
 
