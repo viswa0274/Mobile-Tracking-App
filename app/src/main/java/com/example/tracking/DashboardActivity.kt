@@ -234,6 +234,7 @@ class DashboardActivity : AppCompatActivity() {
                 saveDeviceLocation(serialNumber, fcmToken)
                 dialog.dismiss()
                 Toast.makeText(this, "Device added successfully", Toast.LENGTH_SHORT).show()
+                scheduleSimCheck(this)
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Error adding device: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -249,6 +250,22 @@ class DashboardActivity : AppCompatActivity() {
                 Log.d("SimChangeWorker", msg)  // Log subscription status
             }
     }*/
+    fun scheduleSimCheck(context: Context) {
+        val workRequest = PeriodicWorkRequestBuilder<SimChangeWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)  // Only run when connected to the internet
+                    .setRequiresBatteryNotLow(false)  // Avoid running when battery is low
+                    .build()
+            )
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "SimCheckWorker",
+            ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
+    }
     @SuppressLint("HardwareIds", "MissingPermission")
     private fun saveDeviceLocation(serialNumber: String, fcmToken: String?) {
         if (fcmToken == null) {

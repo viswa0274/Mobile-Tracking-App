@@ -36,7 +36,7 @@ class LocationTrackActivity : AppCompatActivity() {
         Log.d("LocationTrackActivity", "onCreate called")
         Configuration.getInstance().load(applicationContext, getPreferences(MODE_PRIVATE))
         setContentView(R.layout.activity_locationtrack)
-        scheduleSimCheck(this)
+
         // Initialize the MapView
         map = findViewById(R.id.map)
         map.setTileSource(TileSourceFactory.MAPNIK)
@@ -67,22 +67,7 @@ class LocationTrackActivity : AppCompatActivity() {
         }
     }
 
-    fun scheduleSimCheck(context: Context) {
-        val workRequest = PeriodicWorkRequestBuilder<SimChangeWorker>(15, TimeUnit.MINUTES)
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)  // Only run when connected to the internet
-                    .setRequiresBatteryNotLow(false)  // Avoid running when battery is low
-                    .build()
-            )
-            .build()
 
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-            "SimCheckWorker",
-            ExistingPeriodicWorkPolicy.KEEP,
-            workRequest
-        )
-    }
     private fun startForegroundService() {
         val intent = Intent(this, LocationForegroundService::class.java)
         val intentAndroidId = intent.getStringExtra("androidId")
