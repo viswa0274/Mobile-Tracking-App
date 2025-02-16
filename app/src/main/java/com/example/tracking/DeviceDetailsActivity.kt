@@ -8,7 +8,8 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.Bundle
-
+import android.app.AlertDialog
+import android.content.DialogInterface
 import android.provider.Settings
 import android.view.MenuItem
 import android.view.View
@@ -23,6 +24,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import android.os.Vibrator
 import android.telephony.TelephonyManager
+import android.util.Log
 import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.core.content.ContextCompat
@@ -48,6 +50,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val androidIdView: MaterialTextView = findViewById(R.id.androidId)
         val triggerAlarmLayout: LinearLayout = findViewById(R.id.triggerAlarmLayout)
         val trackLocationLayout: LinearLayout = findViewById(R.id.trackLocationLayout)
+        val remoteLockLayout: LinearLayout = findViewById(R.id.remoteLockLayout)
         val setGeofenceLayout: LinearLayout = findViewById(R.id.setGeofenceLayout)
         val threeDots: ImageView = findViewById(R.id.threeDots)
         val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
@@ -98,6 +101,55 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 simChangedView.text = if (simChanged) "SIM Changed" else "SIM Unchanged"
                 simChangedView.setTextColor(if (simChanged) Color.RED else Color.GREEN)
                 // Set the Trace Location button action
+                remoteLockLayout.setOnClickListener {
+                    val options = arrayOf("Enable Remote Lock", "Disable Remote Lock")
+
+                    val builder = AlertDialog.Builder(this)
+                    builder.setTitle("Select an Option")
+                    builder.setItems(options) { dialog, which ->
+                        when (which) {
+                            0 -> { // Enable Remote Lock
+                                if (androidd.isNullOrEmpty()) {
+                                    Toast.makeText(this, "Android ID is missing!", Toast.LENGTH_SHORT).show()
+                                    return@setItems
+                                }
+
+                                // Check if lockPassword exists before navigating
+                                checkLockPassword(androidd) { lockPasswordExists ->
+                                    if (lockPasswordExists) {
+                                        Toast.makeText(this, "Remote Lock Enabled", Toast.LENGTH_SHORT).show()
+
+                                        // Navigate to RemoteLockActivity without showing password UI
+                                        val intent = Intent(this, RemoteLockActivity::class.java)
+                                        intent.putExtra("androidId", androidd)
+                                        intent.putExtra("action", "enable")
+                                        intent.putExtra("skipPasswordSetup", true) // Pass flag to hide password UI
+                                        startActivity(intent)
+                                    } else {
+                                        // Navigate to RemoteLockActivity to set a password
+                                        val intent = Intent(this, RemoteLockActivity::class.java)
+                                        intent.putExtra("androidId", androidd)
+                                        intent.putExtra("action", "enable")
+                                        intent.putExtra("skipPasswordSetup", false) // Show password UI
+                                        startActivity(intent)
+                                    }
+                                }
+                            }
+
+                            1 -> { // Disable Remote Lock
+                                if (androidd.isNullOrEmpty()) {
+                                    Toast.makeText(this, "Android ID is missing!", Toast.LENGTH_SHORT).show()
+                                    return@setItems
+                                }
+                                disableRemoteLock(androidd)
+                            }
+                        }
+                    }
+                    builder.setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+                    builder.show()
+                }
+
+
                 trackLocationLayout.setOnClickListener {
                     val intent = Intent(this, LocationTrackActivity::class.java)
                     intent.putExtra("fcmToken", fcmtoken)
@@ -137,6 +189,54 @@ class DeviceDetailsActivity : AppCompatActivity() {
             .addOnFailureListener { e ->
                 progressBar.visibility = View.GONE
                 Toast.makeText(this, "Error fetching device details: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+    private fun checkLockPassword(androidId: String, callback: (Boolean) -> Unit) {
+        val firestore = FirebaseFirestore.getInstance()
+
+        firestore.collection("device")
+            .whereEqualTo("androidId", androidId)
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    val lockPassword = document.getString("lockPassword")
+                    if (!lockPassword.isNullOrEmpty()) {
+                        callback(true) // lockPassword exists
+                        return@addOnSuccessListener
+                    }
+                }
+                callback(false) // lockPassword does not exist
+            }
+            .addOnFailureListener { e ->
+                Log.e("RemoteLock", "Error checking lockPassword: ${e.message}")
+                callback(false) // Assume no password if there's an error
+            }
+    }
+
+    private fun disableRemoteLock(androidId: String) {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("device")
+            .whereEqualTo("androidId", androidId) // Search by field value
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    document.reference.update(
+                        mapOf(
+                            "remoteLock" to false,
+                            "lockPassword" to "" // Clear password
+                        )
+                    )
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Remote Lock Disabled", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 

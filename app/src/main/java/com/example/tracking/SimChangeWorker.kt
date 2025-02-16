@@ -1,8 +1,12 @@
 package com.example.tracking
-
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
+import android.content.Intent
+import android.widget.Toast
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.admin.DeviceAdminReceiver
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
@@ -31,6 +35,73 @@ class SimChangeWorker(context: Context, workerParams: WorkerParameters) : Worker
         val androidId = Settings.Secure.getString(applicationContext.contentResolver, Settings.Secure.ANDROID_ID)
         fetchDeviceDetails(androidId)
     }
+    private fun listenForRemoteLock(deviceId: String) {
+        firestore.collection("device")
+            .document(deviceId)
+            .addSnapshotListener { documentSnapshot, e ->
+                if (e != null) {
+                    Log.e("RemoteLockListener", "Listen failed: ${e.message}")
+                    return@addSnapshotListener
+                }
+
+                if (documentSnapshot != null && documentSnapshot.exists()) {
+                    val remoteLock = documentSnapshot.getBoolean("remoteLock") ?: false
+                    val lockPassword = documentSnapshot.getString("lockPassword")
+
+                    if (remoteLock) {
+                        Log.d("RemoteLockListener", "Remote lock triggered for device: $deviceId")
+
+                        // Trigger device lock
+                        lockDevice(lockPassword)
+
+                        // Reset remoteLock field to false after locking
+                        firestore.collection("device").document(deviceId)
+                            .update("remoteLock", false)
+                            .addOnSuccessListener {
+                                Log.d("RemoteLockListener", "Remote lock field reset to false.")
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("RemoteLockListener", "Failed to reset remote lock field: ${e.message}")
+                            }
+                    }
+                }
+            }
+    }
+    private fun lockDevice(lockPassword: String?) {
+        val devicePolicyManager = applicationContext.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val componentName = ComponentName(applicationContext, DeviceAdminReceiver::class.java)
+
+        if (devicePolicyManager.isAdminActive(componentName)) {
+            // Check if a screen lock already exists
+            val keyguardManager = applicationContext.getSystemService(Context.KEYGUARD_SERVICE) as android.app.KeyguardManager
+            if (!keyguardManager.isDeviceSecure) {
+                // No screen lock exists, set the password
+                lockPassword?.let {
+                    if (devicePolicyManager.resetPassword(it, 0)) {
+                        Log.d("RemoteLock", "Temporary password set successfully")
+                    } else {
+                        Log.e("RemoteLock", "Failed to set temporary password")
+                    }
+                }
+            } else {
+                Log.d("RemoteLock", "Existing screen lock detected, using current lock")
+            }
+
+            // Lock the device
+            devicePolicyManager.lockNow()
+            Toast.makeText(applicationContext, "Device Locked via Remote Lock", Toast.LENGTH_SHORT).show()
+        } else {
+            Log.e("RemoteLock", "Device Admin Permission Not Enabled")
+            Toast.makeText(applicationContext, "Device Admin Permission Required", Toast.LENGTH_LONG).show()
+
+            // Redirect user to enable Device Admin
+            val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+            intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
+            intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Enable this permission to allow remote locking.")
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            applicationContext.startActivity(intent)
+        }
+    }
 
     private fun fetchDeviceDetails(androidId: String) {
         firestore.collection("device")
@@ -46,7 +117,7 @@ class SimChangeWorker(context: Context, workerParams: WorkerParameters) : Worker
                         val deviceName = document.getString("deviceName") ?: "Unknown Device"
                         val deviceModel = document.getString("model") ?: "Unknown Model"
                         val currentSimNumber = getSimPhoneNumber()
-
+                        listenForRemoteLock(document.id)
                         // Save registeredNumber offline
                         saveRegisteredNumber(registeredNumber)
 
