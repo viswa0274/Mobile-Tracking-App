@@ -18,6 +18,7 @@ class SignUpActivity : AppCompatActivity() {
     private lateinit var etPassword: EditText
     private lateinit var etConfirmPassword: EditText
     private lateinit var btnSubmit: Button
+    private lateinit var tvSignIn: TextView
     private lateinit var firestore: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +35,15 @@ class SignUpActivity : AppCompatActivity() {
         etPassword = findViewById(R.id.etPassword)
         etConfirmPassword = findViewById(R.id.etConfirmPassword)
         btnSubmit = findViewById(R.id.btnSubmit)
+        tvSignIn = findViewById(R.id.tvSignIn)
+
+        // Make "Sign In" text clickable and navigate to SignInActivity
+        tvSignIn.setTextColor(resources.getColor(R.color.green)) // Change text color
+        tvSignIn.setOnClickListener {
+            val intent = Intent(this, SignInActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
 
         btnSubmit.setOnClickListener {
             val name = etName.text.toString().trim()
@@ -50,18 +60,13 @@ class SignUpActivity : AppCompatActivity() {
 
             // Validate email format
             if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                Toast.makeText(this, "Please enter a valid email address", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Please enter a valid email address", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             // Validate phone number
             if (!Patterns.PHONE.matcher(phone).matches() || phone.length != 10) {
-                Toast.makeText(
-                    this,
-                    "Please enter a valid 10-digit phone number",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, "Please enter a valid 10-digit phone number", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -97,11 +102,7 @@ class SignUpActivity : AppCompatActivity() {
                         .document(userId) // Use the generated userId as the document ID
                         .set(user)
                         .addOnSuccessListener {
-                            Toast.makeText(
-                                this,
-                                "Account created successfully!",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show()
                             val intent = Intent(this, SignInActivity::class.java)
                             startActivity(intent)
                             finish()
@@ -113,7 +114,6 @@ class SignUpActivity : AppCompatActivity() {
                 .addOnFailureListener { e ->
                     Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
-
         }
     }
 }

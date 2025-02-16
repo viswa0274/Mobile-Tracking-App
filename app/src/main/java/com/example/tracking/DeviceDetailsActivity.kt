@@ -102,7 +102,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 simChangedView.setTextColor(if (simChanged) Color.RED else Color.GREEN)
                 // Set the Trace Location button action
                 remoteLockLayout.setOnClickListener {
-                    val options = arrayOf("Enable Remote Lock", "Disable Remote Lock")
+                    val options = arrayOf("Enable Remote Lock")
 
                     val builder = AlertDialog.Builder(this)
                     builder.setTitle("Select an Option")
@@ -114,40 +114,18 @@ class DeviceDetailsActivity : AppCompatActivity() {
                                     return@setItems
                                 }
 
-                                // Check if lockPassword exists before navigating
-                                checkLockPassword(androidd) { lockPasswordExists ->
-                                    if (lockPasswordExists) {
-                                        Toast.makeText(this, "Remote Lock Enabled", Toast.LENGTH_SHORT).show()
-
-                                        // Navigate to RemoteLockActivity without showing password UI
-                                        val intent = Intent(this, RemoteLockActivity::class.java)
-                                        intent.putExtra("androidId", androidd)
-                                        intent.putExtra("action", "enable")
-                                        intent.putExtra("skipPasswordSetup", true) // Pass flag to hide password UI
-                                        startActivity(intent)
-                                    } else {
-                                        // Navigate to RemoteLockActivity to set a password
-                                        val intent = Intent(this, RemoteLockActivity::class.java)
-                                        intent.putExtra("androidId", androidd)
-                                        intent.putExtra("action", "enable")
-                                        intent.putExtra("skipPasswordSetup", false) // Show password UI
-                                        startActivity(intent)
-                                    }
-                                }
+                                val intent = Intent(this, RemoteLockActivity::class.java)
+                                intent.putExtra("androidId", androidd)
+                                intent.putExtra("action", "enable") // Pass action type
+                                startActivity(intent)
                             }
 
-                            1 -> { // Disable Remote Lock
-                                if (androidd.isNullOrEmpty()) {
-                                    Toast.makeText(this, "Android ID is missing!", Toast.LENGTH_SHORT).show()
-                                    return@setItems
-                                }
-                                disableRemoteLock(androidd)
-                            }
                         }
                     }
                     builder.setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
                     builder.show()
                 }
+
 
 
                 trackLocationLayout.setOnClickListener {
@@ -175,10 +153,9 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     popupMenu.setOnMenuItemClickListener { item: MenuItem ->
                         when (item.itemId) {
                             R.id.removeDevice -> {
-                                removeDevice(fcmtoken)
+                                showConfirmDeleteDialog(fcmtoken)
                                 true
                             }
-
                             else -> false
                         }
                     }
@@ -191,29 +168,9 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 Toast.makeText(this, "Error fetching device details: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-    private fun checkLockPassword(androidId: String, callback: (Boolean) -> Unit) {
-        val firestore = FirebaseFirestore.getInstance()
 
-        firestore.collection("device")
-            .whereEqualTo("androidId", androidId)
-            .get()
-            .addOnSuccessListener { documents ->
-                for (document in documents) {
-                    val lockPassword = document.getString("lockPassword")
-                    if (!lockPassword.isNullOrEmpty()) {
-                        callback(true) // lockPassword exists
-                        return@addOnSuccessListener
-                    }
-                }
-                callback(false) // lockPassword does not exist
-            }
-            .addOnFailureListener { e ->
-                Log.e("RemoteLock", "Error checking lockPassword: ${e.message}")
-                callback(false) // Assume no password if there's an error
-            }
-    }
 
-    private fun disableRemoteLock(androidId: String) {
+   /* private fun disableRemoteLock(androidId: String) {
         val db = FirebaseFirestore.getInstance()
 
         db.collection("device")
@@ -238,7 +195,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-    }
+    }*/
 
 
     @SuppressLint("MissingInflatedId")
@@ -361,7 +318,22 @@ class DeviceDetailsActivity : AppCompatActivity() {
             }
     }
 
+    private fun showConfirmDeleteDialog(fcmtoken: String) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Remove Device")
+        builder.setMessage("Are you sure you want to remove this device?.")
 
+        builder.setPositiveButton("Yes") { dialog, _ ->
+            removeDevice(fcmtoken)
+            dialog.dismiss()
+        }
+
+        builder.setNegativeButton("No") { dialog, _ ->
+            dialog.dismiss()
+        }
+
+        builder.show()
+    }
     private fun removeDevice(fcmtoken: String?) {
         if (fcmtoken.isNullOrEmpty()) {
             Toast.makeText(this, "FCM Token not provided.", Toast.LENGTH_SHORT).show()

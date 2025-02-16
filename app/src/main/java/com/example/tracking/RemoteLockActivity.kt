@@ -1,199 +1,178 @@
 package com.example.tracking
 
+import android.annotation.SuppressLint
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.view.View
-import android.widget.Button
-import android.widget.EditText
+import android.provider.Settings
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import android.app.ProgressDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 
 class RemoteLockActivity : AppCompatActivity() {
 
-    private lateinit var enterPassword: EditText
-    private lateinit var confirmPassword: EditText
-    private lateinit var btnSetLock: Button
-    private lateinit var androidId: String
+    private lateinit var deviceAndroidId: String
+    private lateinit var intentAndroidId: String
+    private lateinit var progressDialog: ProgressDialog
     private lateinit var dpm: DevicePolicyManager
     private lateinit var deviceAdmin: ComponentName
     private val db = FirebaseFirestore.getInstance()
-    private var action: String? = null
+    private val ADMIN_REQUEST_CODE = 1
+    private var lockListener: ListenerRegistration? = null
 
+
+    @SuppressLint("HardwareIds")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_remote_lock)
+        progressDialog = ProgressDialog(this)
+        progressDialog.setMessage("Processing remote lock...")
+        progressDialog.setCancelable(false)
+        progressDialog.show()
 
-        enterPassword = findViewById(R.id.enterPassword)
-        confirmPassword = findViewById(R.id.confirmPassword)
-        btnSetLock = findViewById(R.id.btnSetLock)
-
-        androidId = intent.getStringExtra("androidId") ?: ""
-        action = intent.getStringExtra("action")
-
+        // Initialize Device Policy Manager
         dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         deviceAdmin = ComponentName(this, MyDeviceAdminReceiver::class.java)
 
-        // Check if we should hide password UI
-        val skipPasswordSetup = intent.getBooleanExtra("skipPasswordSetup", false)
-        if (skipPasswordSetup) {
-            findViewById<View>(R.id.passwordSetupLayout).visibility = View.GONE
-            lockDevice()
-            // Navigate to DeviceDetailsActivity after hiding password setup
-            val intent = Intent(this, DeviceDetailsActivity::class.java)
-            startActivity(intent)
-            finish() // Close RemoteLockActivity
-        }
+        // Fetch device's Android ID
+        deviceAndroidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
 
-
-        // Request Device Admin permission if not granted
-        if (!dpm.isAdminActive(deviceAdmin)) {
+        // Retrieve androidId from intent
+        intentAndroidId = intent.getStringExtra("androidId") ?: ""
+        startListeningForRemoteLock()
+        // Check if Device Admin is active
+        if (dpm.isAdminActive(deviceAdmin)) {
+            processRemoteLock()
+        } else {
             showAdminPermissionDialog()
         }
-
-        // If action is "disable", attempt to disable remote lock
-        if (action == "disable") {
-            disableRemoteLock()
-        }
-
-        btnSetLock.setOnClickListener {
-            val password = enterPassword.text.toString().trim()
-            val confirmPass = confirmPassword.text.toString().trim()
-
-            if (password.isEmpty() || confirmPass.isEmpty()) {
-                Toast.makeText(this, "Please enter and confirm password", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            if (password != confirmPass) {
-                Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            enableRemoteLock(password)
-        }
     }
+    private fun startListeningForRemoteLock() {
+        lockListener = db.collection("device")
+            .whereEqualTo("androidId", deviceAndroidId)
+            .addSnapshotListener { snapshots, error ->
+                if (error != null) {
+                    Toast.makeText(this, "Error listening for lock updates: ${error.message}", Toast.LENGTH_SHORT).show()
+                    return@addSnapshotListener
+                }
 
+                for (document in snapshots!!.documents) {
+                    val remoteLock = document.getBoolean("remoteLock") ?: false
+                    if (remoteLock) {
+                        lockDeviceAndReset()
+                        break
+                    }
+                }
+            }
+    }
+    // Prompt user to enable Device Admin
     private fun showAdminPermissionDialog() {
         AlertDialog.Builder(this)
             .setTitle("Enable Device Admin")
-            .setMessage("This app requires Device Admin permission to lock your phone remotely. Please enable it in the next screen.")
+            .setMessage("This app requires Device Admin permission to lock your device remotely. Please enable it in the next screen.")
             .setPositiveButton("OK") { _, _ -> requestDeviceAdmin() }
-            .setNegativeButton("Cancel", null)
+            .setNegativeButton("Cancel") { _, _ ->
+                Toast.makeText(this, "Device Admin permission required!", Toast.LENGTH_SHORT).show()
+                finish()
+            }
             .show()
     }
 
+    // Request Device Admin Permission
     private fun requestDeviceAdmin() {
         val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
         intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, deviceAdmin)
-        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "This permission is required for remote lock.")
-        startActivity(intent)
+        intent.putExtra(
+            DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+            "This permission is required for remote locking."
+        )
+        startActivityForResult(intent, ADMIN_REQUEST_CODE)
     }
 
-    private fun enableRemoteLock(password: String) {
-        db.collection("device")
-            .whereEqualTo("androidId", androidId)
-            .get()
-            .addOnSuccessListener { documents ->
-                if (!documents.isEmpty) {
-                    val document = documents.documents.first()
-                    val docId = document.id
-
-                    val updateData = mapOf(
-                        "remoteLock" to true,
-                        "lockPassword" to password
-                    )
-
-                    db.collection("device").document(docId)
-                        .update(updateData)
-                        .addOnSuccessListener {
-                            Toast.makeText(this, "Remote Lock Set Successfully", Toast.LENGTH_SHORT).show()
-                            lockDevice()
-                            finish()
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("RemoteLock", "Error updating Firestore: ${e.message}")
-                            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                } else {
-                    Toast.makeText(this, "Device not found!", Toast.LENGTH_SHORT).show()
-                }
+    // Handle the result of the Device Admin activation request
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == ADMIN_REQUEST_CODE) {
+            if (dpm.isAdminActive(deviceAdmin)) {
+                Toast.makeText(this, "Device Admin activated!", Toast.LENGTH_SHORT).show()
+                processRemoteLock()
+            } else {
+                Toast.makeText(this, "Device Admin activation failed!", Toast.LENGTH_SHORT).show()
+                finish()
             }
-            .addOnFailureListener { e ->
-                Log.e("RemoteLock", "Error fetching document: ${e.message}")
-                Toast.makeText(this, "Error fetching document: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun lockDevice() {
-        if (!dpm.isAdminActive(deviceAdmin)) {
-            Toast.makeText(this, "Device Admin permission not granted!", Toast.LENGTH_SHORT).show()
-            return
         }
-
-        db.collection("device").whereEqualTo("androidId", androidId)
-            .get()
-            .addOnSuccessListener { documents ->
-                if (!documents.isEmpty) {
-                    val document = documents.documents.first()
-                    val password = document.getString("lockPassword") ?: ""
-
-                    if (password.isNotEmpty()) {
-                        if (dpm.resetPassword(password, 0)) {
-                            Toast.makeText(this, "Remote password set successfully", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(this, "Existing screen lock detected, using current lock", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-
-                    dpm.lockNow()
-                    Toast.makeText(this, "Device locked", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "Device not found in Firestore", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("RemoteLock", "Error fetching password: ${e.message}")
-                Toast.makeText(this, "Error fetching password: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
     }
 
-    private fun disableRemoteLock() {
+    // Process the remote lock logic
+    private fun processRemoteLock() {
+        if (deviceAndroidId == intentAndroidId) {
+            // 🔥 Directly lock the device since IDs match
+            lockDeviceAndReset()
+        } else {
+            // If IDs do not match, set remoteLock to true for the intent's androidId
+            db.collection("device")
+                .whereEqualTo("androidId", intentAndroidId)
+                .get()
+                .addOnSuccessListener { documents ->
+                    if (!documents.isEmpty) {
+                        for (document in documents) {
+                            val docId = document.id
+                            db.collection("device").document(docId)
+                                .update("remoteLock", true)
+                                .addOnSuccessListener {
+                                    Toast.makeText(this, "Remote lock triggered for target device", Toast.LENGTH_SHORT).show()
+                                    finish()
+                                }
+                                .addOnFailureListener { e ->
+                                    Toast.makeText(this, "Error updating lock status: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    finish()
+                                }
+                        }
+                    } else {
+                        progressDialog.dismiss()
+                        Toast.makeText(this, "Device not found!", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Error fetching device: ${e.message}", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+        }
+    }
+
+    // 🔥 Lock the device and reset remoteLock to false
+    private fun lockDeviceAndReset() {
+        dpm.lockNow()
+        Toast.makeText(this, "Device locked successfully!", Toast.LENGTH_SHORT).show()
+
+        // Reset remoteLock to false in Firestore
         db.collection("device")
-            .whereEqualTo("androidId", androidId)
+            .whereEqualTo("androidId", deviceAndroidId)
             .get()
             .addOnSuccessListener { documents ->
                 if (!documents.isEmpty) {
-                    val document = documents.documents.first()
-                    val docId = document.id
-
-                    val updateData = mapOf(
-                        "remoteLock" to false,
-                        "lockPassword" to ""
-                    )
-
-                    db.collection("device").document(docId)
-                        .update(updateData)
-                        .addOnSuccessListener {
-                            Toast.makeText(this, "Remote Lock Disabled", Toast.LENGTH_SHORT).show()
-                            finish()
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("RemoteLock", "Error updating Firestore: ${e.message}")
-                            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                } else {
-                    Toast.makeText(this, "Device not found!", Toast.LENGTH_SHORT).show()
+                    for (document in documents) {
+                        val docId = document.id
+                        db.collection("device").document(docId)
+                            .update("remoteLock", false)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Lock status reset", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Error resetting lock status: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("RemoteLock", "Error fetching document: ${e.message}")
-                Toast.makeText(this, "Error fetching document: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error fetching device for reset: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+
+        finish()
     }
 }
