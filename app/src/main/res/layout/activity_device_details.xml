@@ -378,6 +378,7 @@
                     android:layout_height="100dp"
                     android:orientation="vertical"
                     android:gravity="center"
+                    android:id="@+id/FailedAttemptsLayout"
                     android:background="@drawable/rounded_button_bg"
                     android:padding="12dp"
                     android:layout_margin="8dp">

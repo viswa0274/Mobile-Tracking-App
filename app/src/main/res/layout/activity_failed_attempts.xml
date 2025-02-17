@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Display number of failed attempts -->
+    <TextView
+        android:id="@+id/attemptsTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Failed Attempts: 0"
+        android:textSize="18sp" />
+
+    <!-- Display image of the intruder -->
+    <ImageView
+        android:id="@+id/intruderImageView"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:src="@drawable/ic_launcher_background"
+        android:contentDescription="Intruder Image"
+        android:layout_marginTop="20dp" />
+
+    <!-- Display the time and date of failed attempts -->
+    <TextView
+        android:id="@+id/attemptTimeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Attempt Date and Time"
+        android:textSize="14sp"
+        android:layout_marginTop="10dp" />
+</LinearLayout>

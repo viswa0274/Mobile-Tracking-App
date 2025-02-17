@@ -183,36 +183,38 @@ class LocationForegroundService : Service() {
     private fun sendGeofenceEntryNotification() {
         Log.d("LocationService", "Sending geofence entry notification")
 
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Geofence Entry Alert")
             .setContentText("Your device has re-entered the geofence area.")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI) // Default sound
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
+            .setAutoCancel(true)  // Allows user to dismiss it
             .build()
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(2, notification)
+        notificationManager.notify(2, notification)  // Unique ID for entry notification
     }
+
 
 
 
     private fun sendGeofenceExitNotification() {
         Log.d("LocationService", "Sending geofence exit notification")
 
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Geofence Exit Alert")
             .setContentText("Your device exited the geofence area.")
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
-            .setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI) // Default sound
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
+            .setAutoCancel(true)  // Allows user to dismiss it
             .build()
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(1, notification)
+        notificationManager.notify(1, notification)  // Unique ID for exit notification
     }
+
 
 
 
@@ -250,26 +252,19 @@ class LocationForegroundService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val soundUri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-
-            val audioAttributes = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION) // Ensure correct import
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .build()
-
             val channel = NotificationChannel(
                 channelId,
                 "Location Tracking",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Geofence and SIM change alerts"
-                setSound(soundUri, audioAttributes) // Set default notification sound
             }
 
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
         }
-    }
+
+}
 
 
 

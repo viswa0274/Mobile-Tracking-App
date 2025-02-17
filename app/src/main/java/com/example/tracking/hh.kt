@@ -1,0 +1,134 @@
+package com.example.tracking
+
+import android.annotation.SuppressLint
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.os.Bundle
+import android.util.Log
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.squareup.picasso.Picasso
+
+class hh : AppCompatActivity() {
+
+    private lateinit var attemptsTextView: TextView
+    private lateinit var intruderImageView: ImageView
+    private lateinit var attemptTimeTextView: TextView
+
+    private val firestore = FirebaseFirestore.getInstance()
+    private lateinit var devicePolicyManager: DevicePolicyManager
+    private lateinit var componentName: ComponentName
+
+    @SuppressLint("SetTextI18n")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_failed_attempts)
+
+        attemptsTextView = findViewById(R.id.attemptsTextView)
+        intruderImageView = findViewById(R.id.intruderImageView)
+        attemptTimeTextView = findViewById(R.id.attemptTimeTextView)
+
+        devicePolicyManager = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        componentName = ComponentName(this, MyDeviceAdminReceiver::class.java)
+
+        val androidId = intent.getStringExtra("androidId")
+        if (androidId == null) {
+            Log.e("FailedAttemptsActivity", "androidId is null. Cannot proceed.")
+            Toast.makeText(this, "Error: Device ID not found!", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        checkAdminStatus()
+
+        val docRef = firestore.collection("device_failed_attempts").document(androidId)
+
+        docRef.get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val attempts = document.getLong("attempts") ?: 0
+                    val photoUrl = document.getString("photoUrl")
+                    val timestamp = document.getLong("timestamp") ?: 0L
+
+                    attemptsTextView.text = "Failed Attempts: $attempts"
+                    attemptTimeTextView.text = if (timestamp > 0) {
+                        "Attempt Time: ${convertTimestampToDate(timestamp)}"
+                    } else {
+                        "Attempt Time: Not Available"
+                    }
+
+                    if (!photoUrl.isNullOrEmpty()) {
+                        val storageRef = FirebaseStorage.getInstance().getReference("intruder_photos/$androidId/$photoUrl")
+                        storageRef.downloadUrl
+                            .addOnSuccessListener { uri -> Picasso.get().load(uri).into(intruderImageView) }
+                            .addOnFailureListener {
+                                Log.e("FailedAttemptsActivity", "Error loading image: ${it.message}")
+                                Toast.makeText(this, "Failed to load intruder image", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                } else {
+                    createNewFailedAttemptsDocument(docRef)
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Failed to fetch document: ${e.message}")
+                Toast.makeText(this, "Error retrieving failed attempts", Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun checkAdminStatus() {
+        if (!devicePolicyManager.isAdminActive(componentName)) {
+            showAdminActivationDialog()
+        }
+    }
+
+    private fun showAdminActivationDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Admin Access Required")
+            .setMessage("To track failed attempts, this app needs **Device Admin permissions**. Please activate it to continue.")
+            .setCancelable(false) // Prevents user from dismissing without action
+            .setPositiveButton("Activate Now") { _, _ ->
+                val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+                intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
+                intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "This app requires admin permissions to detect unauthorized access.")
+                startActivity(intent)
+            }
+            .setNegativeButton("Exit App") { _, _ ->
+                Toast.makeText(this, "Admin access is required! Exiting app...", Toast.LENGTH_LONG).show()
+                finishAffinity() // Closes the entire app
+            }
+            .show()
+    }
+
+    private fun createNewFailedAttemptsDocument(docRef: DocumentReference) {
+        val newData = hashMapOf(
+            "attempts" to 0,
+            "photoUrl" to "",
+            "timestamp" to 0L
+        )
+
+        docRef.set(newData)
+            .addOnSuccessListener {
+                Log.d("Firestore", "Created new failed attempts document")
+                attemptsTextView.text = "No failed attempts"
+                attemptTimeTextView.text = "Attempt Time: Not Available"
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Failed to create document: ${e.message}")
+                Toast.makeText(this, "Error creating record", Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun convertTimestampToDate(timestamp: Long): String {
+        val date = java.util.Date(timestamp)
+        val format = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+        return format.format(date)
+    }
+}

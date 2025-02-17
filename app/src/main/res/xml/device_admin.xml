@@ -3,6 +3,8 @@
     <uses-policies>
         <force-lock />
         <reset-password />
+        <limit-password />
+        <watch-login />
         <watch-login />
         <wipe-data />
     </uses-policies>

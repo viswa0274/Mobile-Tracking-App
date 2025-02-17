@@ -15,6 +15,7 @@ googleGmsGoogleServices = "4.4.2"
 firebaseDatabase = "21.0.0"
 firebaseAuthKtx = "23.1.0"
 firebaseFirestore = "25.1.1"
+picasso = "2.8"
 poi = "5.2.3"
 poi-ooxml = "5.2.3"
 playServicesCastFramework = "22.0.0"
@@ -31,10 +32,13 @@ lifecycleViewmodelKtx = "2.8.7"
 navigationFragmentKtx = "2.8.5"
 navigationUiKtx = "2.8.5"
 navigationRuntimeKtx = "2.8.6"
+firebaseStorageKtx = "21.0.1"
+biometricKtx = "1.1.0"
 
 
 [libraries]
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+picasso = { module = "com.squareup.picasso:picasso", version.ref = "picasso" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "play_services" }
 osmdroid-android = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
 osmdroid-wms = { group = "org.osmdroid", name = "osmdroid-wms", version.ref = "osmdroid" }
@@ -65,6 +69,8 @@ androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifec
 androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
 androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
+firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
+androidx-biometric-ktx = { group = "androidx.biometric", name = "biometric-ktx", version.ref = "biometricKtx" }
 
 
 [plugins]

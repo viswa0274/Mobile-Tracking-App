@@ -9,6 +9,9 @@
         android:name="android.hardware.telephony"
         android:required="false"
         tools:ignore="DuplicateUsesFeature" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -17,7 +20,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
@@ -33,7 +36,8 @@
         android:maxSdkVersion="32" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
+        android:maxSdkVersion="32"
+        tools:ignore="ScopedStorage" />
 
     <application
         android:allowBackup="true"
@@ -47,7 +51,9 @@
         tools:targetApi="31">
         <receiver
             android:name=".MyDeviceAdminReceiver"
-            android:exported="true"
+            android:enabled="true"
+            android:exported="false"
+            android:label="Device Admin"
             android:permission="android.permission.BIND_DEVICE_ADMIN">
             <meta-data
                 android:name="android.app.device_admin"
@@ -95,6 +101,7 @@
             android:exported="false">
         </activity>
         <activity android:name=".RemoteLockActivity" />
+        <activity android:name=".FailedAttemptsActivity" />
         <activity
             android:name=".ViewDevicesActivity"
             android:exported="false" />

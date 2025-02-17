@@ -52,6 +52,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val trackLocationLayout: LinearLayout = findViewById(R.id.trackLocationLayout)
         val remoteLockLayout: LinearLayout = findViewById(R.id.remoteLockLayout)
         val setGeofenceLayout: LinearLayout = findViewById(R.id.setGeofenceLayout)
+        val failedAttemptsLayout: LinearLayout = findViewById(R.id.FailedAttemptsLayout)
         val threeDots: ImageView = findViewById(R.id.threeDots)
         val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
 
@@ -127,7 +128,12 @@ class DeviceDetailsActivity : AppCompatActivity() {
                 }
 
 
-
+                failedAttemptsLayout.setOnClickListener{
+                    val intent = Intent(this, FailedAttemptsActivity::class.java)
+                    //intent.putExtra("fcmToken", fcmtoken)
+                    intent.putExtra("androidId", androidd)
+                    startActivity(intent)
+                }
                 trackLocationLayout.setOnClickListener {
                     val intent = Intent(this, LocationTrackActivity::class.java)
                     intent.putExtra("fcmToken", fcmtoken)
