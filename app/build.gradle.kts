@@ -55,21 +55,25 @@ dependencies {
     implementation(libs.play.services.location)
 
     // OpenStreetMap (OSMDroid)
-    implementation(libs.osmdroid.android)
-    implementation(libs.osmdroid.wms)
-    implementation(libs.firebase.messaging.ktx)
-    implementation(libs.androidx.work.runtime.ktx)
-    implementation(libs.androidx.media3.common.ktx)
-    implementation(libs.volley)
-    implementation(libs.firebase.messaging)
-    implementation(libs.androidx.lifecycle.livedata.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.navigation.fragment.ktx)
-    implementation(libs.androidx.navigation.ui.ktx)
-    implementation(libs.androidx.navigation.runtime.ktx)
-    implementation(libs.firebase.storage.ktx)
-    implementation(libs.picasso)
-    implementation(libs.androidx.biometric.ktx)
+    implementation(libs.osmdroid.android)  // OSMDroid Android map library
+    implementation(libs.osmdroid.wms)     // OSMDroid WMS support
+    implementation(libs.firebase.messaging.ktx)  // Firebase Messaging KTX for push notifications
+    implementation(libs.androidx.work.runtime.ktx)  // WorkManager for background tasks
+    implementation(libs.androidx.media3.common.ktx)  // Media3 for media playback
+    implementation(libs.volley)  // Volley for network operations
+    implementation(libs.firebase.messaging)  // Firebase Messaging core
+    implementation(libs.androidx.lifecycle.livedata.ktx)  // LiveData KTX for lifecycle-aware data
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)  // ViewModel KTX for lifecycle-aware UI
+    implementation(libs.androidx.navigation.fragment.ktx)  // Navigation component for fragments
+    implementation(libs.androidx.navigation.ui.ktx)  // Navigation component UI handling
+    implementation(libs.androidx.navigation.runtime.ktx)  // Runtime navigation component
+    implementation(libs.firebase.storage.ktx)  // Firebase Storage KTX for file operations
+    implementation(libs.picasso)  // Picasso for image loading
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.lifecycle.service)
+    implementation(libs.androidx.camera.view)
+
 
     // Testing libraries
     testImplementation(libs.junit)

@@ -12,6 +12,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -33,7 +34,6 @@ class FailedAttemptsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_failed_attempts)
 
-        attemptsTextView = findViewById(R.id.attemptsTextView)
         intruderImageView = findViewById(R.id.intruderImageView)
         attemptTimeTextView = findViewById(R.id.attemptTimeTextView)
 
@@ -57,7 +57,6 @@ class FailedAttemptsActivity : AppCompatActivity() {
                     val attempts = document.getLong("attempts") ?: 0
                     val timestamp = document.getLong("timestamp") ?: 0L
 
-                    attemptsTextView.text = "Failed Attempts: $attempts"
                     attemptTimeTextView.text = "Last Attempt Time: ${convertTimestampToDate(timestamp)}"
 
                     // Load the intruder photo if available
@@ -80,6 +79,9 @@ class FailedAttemptsActivity : AppCompatActivity() {
                 Log.e("Firestore", "Failed to fetch document: ${e.message}")
                 Toast.makeText(this, "Error retrieving failed attempts", Toast.LENGTH_LONG).show()
             }
+
+        // Start the fingerprint authentication when the activity is created
+        //startFingerprintAuthentication()
     }
 
     // Check if the app has device admin permission
@@ -111,7 +113,6 @@ class FailedAttemptsActivity : AppCompatActivity() {
     // Create a new Firestore document if no record exists for failed attempts
     private fun createNewFailedAttemptsDocument(docRef: DocumentReference) {
         val newData = hashMapOf(
-            "attempts" to 0,
             "photoUrl" to "",
             "timestamp" to 0L
         )
@@ -119,7 +120,6 @@ class FailedAttemptsActivity : AppCompatActivity() {
         docRef.set(newData)
             .addOnSuccessListener {
                 Log.d("Firestore", "Created new failed attempts document")
-                attemptsTextView.text = "No failed attempts recorded."
                 attemptTimeTextView.text = "Attempt Time: Not Available"
             }
             .addOnFailureListener { e ->
@@ -134,4 +134,6 @@ class FailedAttemptsActivity : AppCompatActivity() {
         val format = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
         return format.format(date)
     }
+
+
 }
