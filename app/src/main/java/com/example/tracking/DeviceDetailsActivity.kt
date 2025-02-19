@@ -53,6 +53,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val remoteLockLayout: LinearLayout = findViewById(R.id.remoteLockLayout)
         val setGeofenceLayout: LinearLayout = findViewById(R.id.setGeofenceLayout)
         val failedAttemptsLayout: LinearLayout = findViewById(R.id.FailedAttemptsLayout)
+        val dataWipeLayout: LinearLayout = findViewById(R.id.DataWipeLayout)
         val threeDots: ImageView = findViewById(R.id.threeDots)
         val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
 
@@ -127,7 +128,12 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     builder.show()
                 }
 
-
+                dataWipeLayout.setOnClickListener {
+                    val intent = Intent(this, DataWipeActivity::class.java)
+                    //intent.putExtra("fcmToken", fcmtoken)
+                    intent.putExtra("androidId", androidd)
+                    startActivity(intent)
+                }
                 failedAttemptsLayout.setOnClickListener{
                     val intent = Intent(this, FailedAttemptsActivity::class.java)
                     //intent.putExtra("fcmToken", fcmtoken)
@@ -367,6 +373,8 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     .addOnSuccessListener {
                         progressBar.visibility = View.GONE
                         Toast.makeText(this, "Device removed successfully.", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this, ViewDevicesActivity::class.java)
+                        startActivity(intent)
                         finish()
                     }
                     .addOnFailureListener { e ->

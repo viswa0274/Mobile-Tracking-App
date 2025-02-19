@@ -15,18 +15,22 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import android.app.NotificationManager
+import android.os.Environment
 import android.provider.Settings
 import android.telephony.TelephonyManager
 import com.google.android.gms.location.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.messaging.FirebaseMessaging
+import java.io.File
 
 class DashboardActivity : AppCompatActivity() {
 
     private lateinit var sessionManager: SessionManager
     private val firestore = FirebaseFirestore.getInstance()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var dataWipeListenerRegistration: ListenerRegistration? = null
 
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +80,7 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(intent)
         }
         val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-        //fetchDeviceDetails(androidId)
+        listenForDataWipe(androidId)
     }
 
     @SuppressLint("SetTextI18n", "MissingInflatedId", "HardwareIds")
@@ -148,6 +152,86 @@ class DashboardActivity : AppCompatActivity() {
 
         dialog.show()
     }
+
+    private fun listenForDataWipe(androidId: String) {
+        firestore.collection("device")
+            .whereEqualTo("androidId", androidId) // Find the document where androidId matches
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    Log.e("DashboardActivity", "No device found with androidId: $androidId")
+                    return@addOnSuccessListener
+                }
+
+                val documentId = result.documents[0].id // Get the actual document ID
+
+                // Now listen for changes on that document
+                dataWipeListenerRegistration = firestore.collection("device")
+                    .document(documentId)
+                    .addSnapshotListener { snapshot, e ->
+                        if (e != null) {
+                            Log.e("DashboardActivity", "Error listening for data wipe", e)
+                            return@addSnapshotListener
+                        }
+
+                        if (snapshot != null && snapshot.exists()) {
+                            val shouldWipe = snapshot.getBoolean("dataWipe") ?: false
+                            if (shouldWipe) {
+                                deleteFolder(androidId) // Automatically delete the folder
+                            }
+                        }
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e("DashboardActivity", "Error fetching device document", e)
+            }
+    }
+
+    private fun deleteFolder(androidId: String) {
+        val folder = File(Environment.getExternalStorageDirectory(), "pic")
+        if (folder.exists()) {
+            val deleted = folder.deleteRecursively() // Deletes the folder and all contents
+            if (deleted) {
+                Log.d("DashboardActivity", "Folder deleted successfully")
+            } else {
+                Log.e("DashboardActivity", "Failed to delete folder")
+            }
+        } else {
+            Log.w("DashboardActivity", "Folder not found")
+        }
+
+        // Reset the dataWipe field to false in Firestore
+        resetDataWipeField(androidId)
+    }
+
+    private fun resetDataWipeField(androidId: String) {
+        firestore.collection("device")
+            .whereEqualTo("androidId", androidId) // Find the document where androidId matches
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    Log.e("DashboardActivity", "No device found with androidId: $androidId")
+                    return@addOnSuccessListener
+                }
+
+                val documentId = result.documents[0].id // Get the actual document ID
+
+                // Now update the "dataWipe" field in the found document
+                firestore.collection("device")
+                    .document(documentId)
+                    .update("dataWipe", false)
+                    .addOnSuccessListener {
+                        Log.d("DashboardActivity", "Data wipe field reset to false for document: $documentId")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("DashboardActivity", "Failed to reset data wipe field", e)
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e("DashboardActivity", "Error fetching device document", e)
+            }
+    }
+
 
     private fun checkForDuplicateAndroidIdAndFcmToken(
         androidId: String,
