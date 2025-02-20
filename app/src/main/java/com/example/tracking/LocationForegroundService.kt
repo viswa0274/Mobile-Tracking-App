@@ -185,24 +185,26 @@ class LocationForegroundService : Service() {
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+        val defaultSoundUri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Geofence Entry Alert")
             .setContentText("Your device has re-entered the geofence area.")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)  // Allows user to dismiss it
+            .setSound(defaultSoundUri)  // Set default notification sound
             .build()
 
         notificationManager.notify(2, notification)  // Unique ID for entry notification
     }
 
-
-
-
     private fun sendGeofenceExitNotification() {
         Log.d("LocationService", "Sending geofence exit notification")
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val defaultSoundUri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Geofence Exit Alert")
@@ -210,10 +212,12 @@ class LocationForegroundService : Service() {
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)  // Allows user to dismiss it
+            .setSound(defaultSoundUri)  // Set default notification sound
             .build()
 
         notificationManager.notify(1, notification)  // Unique ID for exit notification
     }
+
 
 
 

@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.widget.*
+import android.Manifest
 import java.util.concurrent.TimeUnit
 import androidx.work.*
 import androidx.appcompat.app.AlertDialog
@@ -18,6 +19,7 @@ import android.app.NotificationManager
 import android.os.Environment
 import android.provider.Settings
 import android.telephony.TelephonyManager
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.gms.location.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.GeoPoint
@@ -31,12 +33,15 @@ class DashboardActivity : AppCompatActivity() {
     private val firestore = FirebaseFirestore.getInstance()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var dataWipeListenerRegistration: ListenerRegistration? = null
+    private lateinit var adminReceiver: MyDeviceAdminReceiver
 
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //cameraPermissionRequest.launch(Manifest.permission.CAMERA)
        // subscribeToSimChangeTopic()
-
+        adminReceiver = MyDeviceAdminReceiver()
+        adminReceiver.startListening(this)
         // Initialize SessionManager
         sessionManager = SessionManager(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -82,7 +87,10 @@ class DashboardActivity : AppCompatActivity() {
         val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
         listenForDataWipe(androidId)
     }
-
+    override fun onDestroy() {
+        super.onDestroy()
+        adminReceiver.stopListening()
+    }
     @SuppressLint("SetTextI18n", "MissingInflatedId", "HardwareIds")
     private fun openAddDeviceDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_device, null)

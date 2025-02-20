@@ -1,5 +1,8 @@
 package com.example.tracking
 
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -54,18 +57,15 @@ class SignInActivity : AppCompatActivity() {
         val fullText = "Don't have an account? Sign up"
         val spannableString = SpannableString(fullText)
 
-        // Find the "Sign up" part in the text
         val signUpStart = fullText.indexOf("Sign up")
         val signUpEnd = signUpStart + "Sign up".length
 
-        // Change "Sign up" to blue
         spannableString.setSpan(
             ForegroundColorSpan(Color.BLUE),
             signUpStart, signUpEnd,
             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         )
 
-        // Make "Sign up" clickable
         val clickableSpan = object : ClickableSpan() {
             override fun onClick(widget: View) {
                 startActivity(Intent(this@SignInActivity, SignUpActivity::class.java))
@@ -77,11 +77,9 @@ class SignInActivity : AppCompatActivity() {
             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         )
 
-        // Apply to TextView
         tvSignUp.text = spannableString
         tvSignUp.movementMethod = LinkMovementMethod.getInstance()
     }
-
     private fun verifyUser(email: String, enteredPassword: String) {
         firestore.collection("users")
             .whereEqualTo("email", email)
@@ -97,13 +95,9 @@ class SignInActivity : AppCompatActivity() {
 
                         Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
 
-                        // Start location service after login
-                        startLocationService()
+                        // Show User Agreement Dialog
+                        showUserAgreementDialog()
 
-                        // Navigate to DashboardActivity
-                        val intent = Intent(this, DashboardActivity::class.java)
-                        startActivity(intent)
-                        finish()
                     } else {
                         Toast.makeText(this, "Incorrect password", Toast.LENGTH_SHORT).show()
                     }
@@ -115,9 +109,85 @@ class SignInActivity : AppCompatActivity() {
                 Toast.makeText(this, "Failed: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+    private fun showUserAgreementDialog() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("User Agreement")
+        builder.setMessage(
+            "By using this app, you agree to grant access to:\n\n" +
+                    "✅ Location tracking\n" +
+                    "✅ Data wipe & remote lock\n" +
+                    "✅ Geofence alerts\n\n" +
+                    "Do you agree to these terms?"
+        )
+
+        builder.setPositiveButton("Agree") { _, _ ->
+            // Start location service
+            startLocationService()
+
+            // Check if device admin is activated
+            if (!isDeviceAdminActive()) {
+                promptDeviceAdminActivation()
+            } else {
+                navigateToDashboard()
+            }
+        }
+
+        builder.setNegativeButton("Disagree") { _, _ ->
+            // Log out and return to login screen
+            //sessionManager.clearSession()
+            val intent = Intent(this, SignInActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
+
+        builder.setCancelable(false) // Prevent dismissing without a choice
+        builder.show()
+    }
 
     private fun startLocationService() {
         val intent = Intent(this, LocationTrackActivity::class.java)
         ContextCompat.startForegroundService(this, intent)
+    }
+
+    // ✅ Check if Device Admin is Active
+    private fun isDeviceAdminActive(): Boolean {
+        val devicePolicyManager = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val adminComponent = ComponentName(this, MyDeviceAdminReceiver::class.java)
+        return devicePolicyManager.isAdminActive(adminComponent)
+    }
+
+    // ✅ Prompt the User to Enable Device Admin
+    private fun promptDeviceAdminActivation() {
+        val adminComponent = ComponentName(this, MyDeviceAdminReceiver::class.java)
+        val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
+        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "This app requires admin permissions to enhance security features.")
+        startActivityForResult(intent, REQUEST_CODE_DEVICE_ADMIN)
+    }
+
+    // ✅ Handle the Device Admin Activation Result
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CODE_DEVICE_ADMIN) {
+            if (isDeviceAdminActive()) {
+                Toast.makeText(this, "Device Admin Activated", Toast.LENGTH_SHORT).show()
+                navigateToDashboard()
+            } else {
+                Toast.makeText(this, "Device Admin Activation Required", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    // ✅ Navigate to Dashboard
+    private fun navigateToDashboard() {
+        val intent = Intent(this, DashboardActivity::class.java)
+        startActivity(intent)
+        finish()
+    }
+
+    companion object {
+        private const val REQUEST_CODE_DEVICE_ADMIN = 1001
     }
 }
