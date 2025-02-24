@@ -55,6 +55,7 @@ class DeviceDetailsActivity : AppCompatActivity() {
         val failedAttemptsLayout: LinearLayout = findViewById(R.id.FailedAttemptsLayout)
         val dataWipeLayout: LinearLayout = findViewById(R.id.DataWipeLayout)
         val threeDots: ImageView = findViewById(R.id.threeDots)
+        val navToDashboard = findViewById<ImageView>(R.id.navToDashboard)
         val progressBar: CircularProgressIndicator = findViewById(R.id.progressBar)
 
         // Retrieve IMEI from the Intent
@@ -127,7 +128,10 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     builder.setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
                     builder.show()
                 }
-
+                navToDashboard.setOnClickListener {
+                    val intent = Intent(this, ViewDevicesActivity::class.java)
+                    startActivity(intent)
+                }
                 dataWipeLayout.setOnClickListener {
                     val intent = Intent(this, DataWipeActivity::class.java)
                     //intent.putExtra("fcmToken", fcmtoken)
@@ -373,9 +377,10 @@ class DeviceDetailsActivity : AppCompatActivity() {
                     .addOnSuccessListener {
                         progressBar.visibility = View.GONE
                         Toast.makeText(this, "Device removed successfully.", Toast.LENGTH_SHORT).show()
+                        finish()
                         val intent = Intent(this, ViewDevicesActivity::class.java)
                         startActivity(intent)
-                        finish()
+                       // finish()
                     }
                     .addOnFailureListener { e ->
                         progressBar.visibility = View.GONE

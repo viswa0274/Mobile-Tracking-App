@@ -6,6 +6,18 @@
     android:padding="16dp"
     android:background="@android:color/white">
 
+    <!-- Navigation Icon to DashboardActivity -->
+    <ImageView
+        android:id="@+id/navToDashboard"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:src="@drawable/back"
+        android:contentDescription="Navigate to Dashboard"
+        android:layout_marginBottom="8dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+
     <!-- ProgressBar will be shown while fetching devices -->
     <ProgressBar
         android:id="@+id/progressBar"

@@ -36,16 +36,22 @@ class ViewDevicesActivity : AppCompatActivity() {
 
         val devicesLayout: LinearLayout = findViewById(R.id.devicesLayout)
 
+
         fetchDevices(userId, devicesLayout)
+
     }
 
     @SuppressLint("SetTextI18n", "MissingInflatedId")
     private fun fetchDevices(userId: String, devicesLayout: LinearLayout) {
         // Create a ProgressBar to show while fetching data
         val progressBar = findViewById<ProgressBar>(R.id.progressBar)
+        val navToDashboard = findViewById<ImageView>(R.id.navToDashboard)
         progressBar.visibility = View.VISIBLE
         devicesLayout.removeAllViews()
-
+        navToDashboard.setOnClickListener {
+            val intent = Intent(this, DashboardActivity::class.java)
+            startActivity(intent)
+        }
         firestore.collection("device")
             .whereEqualTo("userId", userId)
             .get()
@@ -92,6 +98,7 @@ class ViewDevicesActivity : AppCompatActivity() {
 
                     // Add the populated device view to the layout
                     devicesLayout.addView(deviceView)
+                   // finish()
                 }
             }
             .addOnFailureListener { e ->

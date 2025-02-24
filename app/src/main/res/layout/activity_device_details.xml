@@ -13,13 +13,42 @@
         android:padding="16dp">
 
         <!-- Three Dots (Overflow Menu) -->
-        <ImageView
-            android:id="@+id/threeDots"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="end"
-            android:src="@drawable/option"
-            android:contentDescription="More options" />
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Back Button (Left Corner) -->
+                <ImageView
+                    android:id="@+id/navToDashboard"
+                    android:layout_width="44dp"
+                    android:layout_height="match_parent"
+                    android:layout_column="0"
+                    android:contentDescription="Navigate to Dashboard"
+                    android:paddingStart="8dp"
+                    android:src="@drawable/back" />
+
+                <!-- Empty Space to Push ThreeDots to Right -->
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <!-- Three Dots Menu (Right Corner) -->
+                <ImageView
+                    android:id="@+id/threeDots"
+                    android:layout_width="53dp"
+                    android:layout_height="40dp"
+                    android:layout_column="1"
+                    android:contentDescription="More options"
+                    android:paddingEnd="8dp"
+                    android:src="@drawable/option" />
+            </TableRow>
+        </TableLayout>
+
 
         <!-- Progress Indicator -->
         <com.google.android.material.progressindicator.CircularProgressIndicator
