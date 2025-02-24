@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.widget.*
 import android.Manifest
+import android.app.NotificationChannel
 import java.util.concurrent.TimeUnit
 import androidx.work.*
 import androidx.appcompat.app.AlertDialog
@@ -16,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import android.app.NotificationManager
+import android.os.Build
 import android.os.Environment
 import android.provider.Settings
 import android.telephony.TelephonyManager
@@ -34,8 +36,9 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var dataWipeListenerRegistration: ListenerRegistration? = null
     private lateinit var adminReceiver: MyDeviceAdminReceiver
+    private val channelId = "sim_change_channel"
 
-    @SuppressLint("SetTextI18n", "MissingInflatedId")
+    @SuppressLint("SetTextI18n", "MissingInflatedId", "HardwareIds")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //cameraPermissionRequest.launch(Manifest.permission.CAMERA)
@@ -55,7 +58,7 @@ class DashboardActivity : AppCompatActivity() {
             finish()
             return
         }
-
+        listenForSimChange(uid)
         // Set the content view
         setContentView(R.layout.activity_dashboard)
 
@@ -91,6 +94,47 @@ class DashboardActivity : AppCompatActivity() {
         super.onDestroy()
         adminReceiver.stopListening()
     }
+
+    private fun listenForSimChange(userId: String) {
+        firestore.collection("device")
+            .whereEqualTo("simChanged", true)
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Log.e("SimChangeListener", "Listen failed: ${e.message}")
+                    return@addSnapshotListener
+                }
+
+                for (doc in snapshots!!) {
+                    val docUserId = doc.getString("userId") ?: continue
+                    if (docUserId == userId) {
+                        val changedDeviceName = doc.getString("deviceName") ?: "Unknown Device"
+                        val changedDeviceModel = doc.getString("model") ?: "Unknown Model"
+
+                        sendSimChangeNotification(changedDeviceName, changedDeviceModel)
+                    }
+                }
+            }
+    }
+
+    private fun sendSimChangeNotification(deviceName: String, deviceModel: String) {
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, "SIM Change Alerts", NotificationManager.IMPORTANCE_HIGH)
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("SIM Change Alert")
+            .setContentText("$deviceName ($deviceModel)'s SIM card changed or removed!")
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .build()
+
+        notificationManager.notify(3, notification)
+    }
+
     @SuppressLint("SetTextI18n", "MissingInflatedId", "HardwareIds")
     private fun openAddDeviceDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_device, null)
@@ -277,9 +321,7 @@ class DashboardActivity : AppCompatActivity() {
                                     "androidId" to androidId
                                 )
 
-                                if (fcmToken != null) {
-                                    deviceData["fcmToken"] = fcmToken
-                                }
+                                deviceData["fcmToken"] = fcmToken
 
                                 addDeviceToFirestore(deviceData, serialNumber, dialog, fcmToken)
                             }
