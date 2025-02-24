@@ -12,6 +12,9 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.firestore.FirebaseFirestore
@@ -51,6 +54,11 @@ class MyDeviceAdminReceiver : DeviceAdminReceiver() {
         val deviceRef = db.collection("device_failed_attempts")
             .whereEqualTo("androidId", androidId)
 
+        // Get current date-time in IST
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        sdf.timeZone = TimeZone.getTimeZone("Asia/Kolkata")
+        val currentTimeIST = sdf.format(System.currentTimeMillis())
+
         deviceRef.get()
             .addOnSuccessListener { result ->
                 if (!result.isEmpty) {
@@ -62,7 +70,8 @@ class MyDeviceAdminReceiver : DeviceAdminReceiver() {
                             .update(
                                 "failedAttempts", currentCount + 1,
                                 "lastFailedMethod", method,
-                                "attemptDetected", true // Mark as detected
+                                "lastAttempted", currentTimeIST,  // Update timestamp
+                                "attemptDetected", true
                             )
                             .addOnSuccessListener {
                                 Log.d("Firestore", "$method failed attempt updated for $androidId")
@@ -77,7 +86,8 @@ class MyDeviceAdminReceiver : DeviceAdminReceiver() {
                         "androidId" to androidId,
                         "failedAttempts" to 1,
                         "lastFailedMethod" to method,
-                        "attemptDetected" to false // Initially false
+                        "lastAttempted" to currentTimeIST,  // Store timestamp
+                        "attemptDetected" to false
                     )
                     db.collection("device_failed_attempts").add(newEntry)
                         .addOnSuccessListener {
@@ -92,7 +102,6 @@ class MyDeviceAdminReceiver : DeviceAdminReceiver() {
                 Log.e("Firestore", "Error fetching device_failed_attempts", e)
             }
     }
-
 
     fun startListening(context: Context) {
         val sessionManager = SessionManager(context)
