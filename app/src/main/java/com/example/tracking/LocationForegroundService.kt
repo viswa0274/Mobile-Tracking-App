@@ -15,6 +15,7 @@ import android.util.Log
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.media.AudioManager
 
 
 import android.media.RingtoneManager
@@ -36,37 +37,114 @@ class LocationForegroundService : Service() {
     private var geofenceLocation: GeoPoint? = null
     private var geofenceRadius: Double = 0.0
     private var isGeofenceFetched = false
-    private var isNotified = false
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        createNotificationChannel()
+        //createNotificationChannel()
+        sessionManager = SessionManager(this)
+        listenForGeofenceChanges()  // Start listening for geofence violations
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val androidId = intent?.getStringExtra("androidId")
-        if (androidId != null) {
-            if (!isGeofenceFetched) {
-                fetchGeofenceData(androidId)
-                isGeofenceFetched = true
-            }
-            //fetchDeviceDetails(androidId) // Fetch contact number from Firestore
+        if (androidId != null && !isGeofenceFetched) {
+            fetchGeofenceData(androidId)
+            isGeofenceFetched = true
         }
-      startForegroundService()
+
+        startForegroundService()
         startLocationUpdates()
-        // handler.post(phoneCheckRunnable)
         return START_STICKY
     }
-    private fun saveGeofenceState(isInside: Boolean) {
-        val prefs = getSharedPreferences("TrackingPrefs", Context.MODE_PRIVATE)
-        prefs.edit().putBoolean("insideGeofence", isInside).apply()
+
+    private fun listenForGeofenceChanges() {
+        firestore.collection("geofence")
+            .whereEqualTo("insideGeofence", false)
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Log.e("LocationService", "Error listening to geofence updates: ${e.message}")
+                    return@addSnapshotListener
+                }
+
+                for (document in snapshots!!.documents) {
+                    val androidId = document.getString("androidId") ?: continue
+                    fetchDeviceUserId(androidId)
+                }
+            }
     }
 
-    private fun wasInsideGeofence(): Boolean {
-        val prefs = getSharedPreferences("TrackingPrefs", Context.MODE_PRIVATE)
-        return prefs.getBoolean("insideGeofence", true)
+    private fun fetchDeviceUserId(androidId: String) {
+        firestore.collection("device")
+            .whereEqualTo("androidId", androidId)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val deviceDoc = documents.documents[0]
+                    val userId = deviceDoc.getString("userId") ?: return@addOnSuccessListener
+                    val deviceName = deviceDoc.getString("deviceName") ?: "Unknown Device"
+                    val model = deviceDoc.getString("model") ?: "Unknown Model"
+
+                     // Get logged-in user ID
+                    val sessionUserId = sessionManager.getUserId()
+                    if (userId == sessionUserId) {
+                        sendGeofenceExitNotification(this, deviceName, model)
+
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("LocationService", "Failed to fetch device userId: ${e.message}")
+            }
     }
+
+    private fun saveGeofenceState(androidId: String, isInside: Boolean) {
+        val geofenceRef = firestore.collection("geofence")
+            .whereEqualTo("androidId", androidId)
+
+        geofenceRef.get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val documentId = documents.documents[0].id  // Get the first matching document ID
+                    firestore.collection("geofence").document(documentId)
+                        .update("insideGeofence", isInside)
+                        .addOnSuccessListener {
+                            Log.d("LocationService", "Geofence state updated: $isInside")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("LocationService", "Failed to update geofence state: ${e.message}")
+                        }
+                } else {
+                    Log.d("LocationService", "No geofence found for androidId: $androidId")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("LocationService", "Failed to query geofence: ${e.message}")
+            }
+    }
+
+
+    private fun wasInsideGeofence(androidId: String, callback: (Boolean) -> Unit) {
+        val geofenceRef = firestore.collection("geofence")
+            .whereEqualTo("androidId", androidId)
+
+        geofenceRef.get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val isInside = documents.documents[0].getBoolean("insideGeofence") ?: true
+                    callback(isInside)
+                } else {
+                    Log.d("LocationService", "No geofence found for androidId: $androidId")
+                    callback(true) // Default to true if no record exists
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("LocationService", "Failed to fetch geofence state: ${e.message}")
+                callback(true) // Default to true in case of an error
+            }
+    }
+
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
@@ -155,6 +233,7 @@ class LocationForegroundService : Service() {
     }
 
 
+    @SuppressLint("HardwareIds")
     private fun checkGeofence(location: Location) {
         if (geofenceLocation != null) {
             val geofenceLat = geofenceLocation!!.latitude
@@ -166,57 +245,84 @@ class LocationForegroundService : Service() {
 
             Log.d("LocationService", "Current Distance from Geofence: $distance meters, Geofence Radius: $geofenceRadius meters")
 
-            if (distance > geofenceRadius && wasInsideGeofence()) {
-                Log.d("LocationService", "Device exited geofence")
-                sendGeofenceExitNotification()
-                saveGeofenceState(false)
-            } else if (distance <= geofenceRadius && !wasInsideGeofence()) {
-                Log.d("LocationService", "Device entered geofence")
-                sendGeofenceEntryNotification()
-                saveGeofenceState(true)
+            val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+
+            wasInsideGeofence(androidId) { wasInside ->
+                if (distance > geofenceRadius && wasInside) {
+                    Log.d("LocationService", "Device exited geofence")
+                    fetchDeviceUserId(androidId)
+                    saveGeofenceState(androidId, false)
+                } else if (distance <= geofenceRadius && !wasInside) {
+                    Log.d("LocationService", "Device entered geofence")
+                    //sendGeofenceEntryNotification()
+                    saveGeofenceState(androidId, true)
+                }
             }
         } else {
             Log.d("LocationService", "Geofence location is null")
         }
     }
 
-    private fun sendGeofenceEntryNotification() {
+
+    /*private fun sendGeofenceEntryNotification() {
         Log.d("LocationService", "Sending geofence entry notification")
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val defaultSoundUri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-        val notification = NotificationCompat.Builder(this, channelId)
+        *//*val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Geofence Entry Alert")
             .setContentText("Your device has re-entered the geofence area.")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)  // Allows user to dismiss it
             .setSound(defaultSoundUri)  // Set default notification sound
+            .build()*//*
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("Geofence Enter Alert")
+            .setContentText("Your device entered the geofence area.")
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .build()
 
         notificationManager.notify(2, notification)  // Unique ID for entry notification
-    }
+    }*/
 
-    private fun sendGeofenceExitNotification() {
-        Log.d("LocationService", "Sending geofence exit notification")
+    private fun sendGeofenceExitNotification(context: Context, deviceName: String, model: String) {
+        Log.d("GeofenceAlert", "Sending geofence exit notification for $deviceName ($model)")
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val defaultSoundUri: Uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val channelId = "geofence_exit_channel"
 
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Geofence Exit Alert")
-            .setContentText("Your device exited the geofence area.")
+        // Create Notification Channel for Android 8+ (Oreo and above)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Geofence Exit Alerts",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                enableVibration(true)
+                setSound(defaultSoundUri, null)
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        // Build the notification
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setContentTitle("Geofence Alert: $deviceName")
+            .setContentText("$deviceName ($model) has exited the geofence area!")
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)  // Allows user to dismiss it
             .setSound(defaultSoundUri)  // Set default notification sound
             .build()
 
-        notificationManager.notify(1, notification)  // Unique ID for exit notification
+        notificationManager.notify(3, notification)  // Unique ID for geofence exit notification
     }
+
 
 
 
@@ -232,43 +338,33 @@ class LocationForegroundService : Service() {
                 "Location Tracking",
                 NotificationManager.IMPORTANCE_LOW // Low importance, no sound
             ).apply {
-                enableLights(false) // Disable lights
-                enableVibration(false) // Disable vibration
+                enableLights(false)
+                enableVibration(false)
             }
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Build the notification with no sound or vibration
+        // Create an Intent to stop the service when the notification is dismissed
+        val stopIntent = Intent(this, LocationForegroundService::class.java)
+        stopIntent.action = "STOP_SERVICE"
+        val pendingIntent = PendingIntent.getService(this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE)
+
+        // Build the notification
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Location Tracking")
             .setContentText("Tracking your location in the background")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setDefaults(0)  // Disable sound and vibration
-            .setPriority(NotificationCompat.PRIORITY_LOW)  // Optional: Low priority for silent notifications
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setAutoCancel(true)  // Allows dismissal
+            .setOngoing(false)  // Ensures it's not a persistent notification
             .build()
+
 
         // Start the service as a foreground service
         startForeground(1, notification)
     }
-
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Location Tracking",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Geofence and SIM change alerts"
-            }
-
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(channel)
-        }
-
-}
 
 
 
