@@ -48,7 +48,7 @@ class DashboardActivity : AppCompatActivity() {
         // Initialize SessionManager
         sessionManager = SessionManager(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
+        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
         // Check if user is logged in
         val uid = sessionManager.getUserId()
         if (uid == null) {
@@ -80,6 +80,15 @@ class DashboardActivity : AppCompatActivity() {
         addDeviceImageView.setOnClickListener {
             openAddDeviceDialog()
         }
+        val moreoptions: LinearLayout = findViewById(R.id.moreOptions)
+        moreoptions.setOnClickListener {
+            moreoptions.alpha = 0.7f  // Add a click effect
+            moreoptions.postDelayed({ moreoptions.alpha = 1f }, 150)
+
+            val intent = Intent(this, MoreOptionsActivity::class.java)
+            startActivity(intent)
+        }
+
 
         val viewDevicesCard: LinearLayout = findViewById(R.id.cardb)
         viewDevicesCard.setOnClickListener {
@@ -87,7 +96,7 @@ class DashboardActivity : AppCompatActivity() {
             intent.putExtra("userId", uid) // Pass userId to the next activity
             startActivity(intent)
         }
-        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+
         listenForDataWipe(androidId)
     }
     override fun onDestroy() {

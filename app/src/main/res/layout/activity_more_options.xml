@@ -1,0 +1,266 @@
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    android:backgroundTint="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Three Dots (Overflow Menu) -->
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Back Button -->
+                <ImageView
+                    android:id="@+id/navToDashboard"
+                    android:layout_width="44dp"
+                    android:layout_height="match_parent"
+                    android:layout_column="0"
+                    android:contentDescription="Navigate to Dashboard"
+                    android:paddingStart="8dp"
+                    android:src="@drawable/back" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <!-- Three Dots Menu -->
+
+            </TableRow>
+        </TableLayout>
+
+        <!-- Heading -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Edit Device Details"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:paddingTop="8dp"
+            android:paddingBottom="16dp" />
+
+        <!-- Progress Indicator -->
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progressBar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            app:indicatorColor="@color/progressColor"
+            app:indicatorSize="48dp"
+            app:trackThickness="4dp" />
+
+        <!-- Table Layout -->
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:stretchColumns="1">
+
+            <!-- User ID -->
+            <TableRow>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="User ID"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/userID"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="Sample Device"
+                    android:textColor="@color/navy"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:clickable="false"
+                    android:background="@android:color/transparent" />
+            </TableRow>
+
+            <!-- Android ID -->
+            <TableRow>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="Android ID"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/androidId"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="78afv07007asew"
+                    android:textColor="@color/navy"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:clickable="false"
+                    android:background="@android:color/transparent" />
+            </TableRow>
+
+            <!-- Device Name -->
+            <TableRow>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="Device Name"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/deviceName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="Sample Device"
+                    android:textColor="@color/navy"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:clickable="false"
+                    android:background="@android:color/transparent" />
+
+                <ImageView
+                    android:id="@+id/editDeviceName"
+                    android:layout_width="35dp"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Edit"
+                    android:padding="8dp"
+                    android:src="@drawable/edit" />
+            </TableRow>
+
+            <!-- Device Model -->
+            <TableRow>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="Device Model"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/deviceModel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="Sample Model"
+                    android:textColor="@color/navy"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:clickable="false"
+                    android:background="@android:color/transparent" />
+
+                <ImageView
+                    android:id="@+id/editDeviceModel"
+                    android:layout_width="35dp"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Edit"
+                    android:padding="8dp"
+                    android:src="@drawable/edit" />
+            </TableRow>
+
+            <!-- IMEI Number -->
+            <TableRow>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="IMEI Number"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/imeiNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="Imei"
+                    android:textColor="@color/navy"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:clickable="false"
+                    android:background="@android:color/transparent" />
+
+                <ImageView
+                    android:id="@+id/editImei"
+                    android:layout_width="35dp"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Edit"
+                    android:padding="8dp"
+                    android:src="@drawable/edit" />
+            </TableRow>
+
+            <!-- Contact Number -->
+            <TableRow>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="Contact Number"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/contactNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="8dp"
+                    android:text="+1234567890"
+                    android:textColor="@color/navy"
+                    android:textSize="16sp"
+                    android:focusable="false"
+                    android:clickable="false"
+                    android:background="@android:color/transparent" />
+
+                <ImageView
+                    android:id="@+id/editContactNumber"
+                    android:layout_width="37dp"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Edit"
+                    android:padding="8dp"
+                    android:src="@drawable/edit" />
+            </TableRow>
+
+        </TableLayout>
+
+        <!-- Update Button -->
+        <Button
+            android:id="@+id/updateButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:backgroundTint="@color/primaryColor"
+            android:text="Update"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:padding="10dp" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
