@@ -19,20 +19,22 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.SEND_SMS" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
-    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.BIND_DEVICE_ADMIN"
+    <uses-permission
+        android:name="android.permission.BIND_DEVICE_ADMIN"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -51,6 +53,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Tracking"
         tools:targetApi="31">
+        <activity
+            android:name=".MoreOptionsActivity"
+            android:exported="false" />
+
         <receiver
             android:name=".MyDeviceAdminReceiver"
             android:enabled="true"
@@ -68,15 +74,15 @@
             </intent-filter>
         </receiver>
 
-
-        <activity android:name=".MainActivity"
+        <activity
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <!-- Receiver for device boot -->
+        </activity> <!-- Receiver for device boot -->
         <receiver
             android:name=".BootBroadcastReceiver"
             android:enabled="true"
@@ -109,8 +115,7 @@
             tools:ignore="MissingClass" />
         <activity
             android:name=".DeviceDetailsActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false"></activity>
         <activity android:name=".RemoteLockActivity" />
         <activity android:name=".FailedAttemptsActivity" />
         <activity android:name=".DataWipeActivity" />
@@ -126,7 +131,6 @@
         <activity
             android:name=".SignUpActivity"
             android:exported="false" />
-
     </application>
 
 </manifest>
