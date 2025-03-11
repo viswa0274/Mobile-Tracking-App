@@ -8,13 +8,12 @@
     app:cardCornerRadius="16dp"
     app:cardElevation="6dp"
     app:strokeWidth="2dp"
-    app:strokeColor="@color/gray">
+    app:strokeColor="@color/cementGrey">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-
         android:padding="20dp">
 
         <TextView
@@ -43,7 +42,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:stretchColumns="1">
-
             <TableRow>
                 <TextView
                     android:layout_width="wrap_content"
@@ -56,7 +54,7 @@
                 <EditText
                     android:id="@+id/userID"
                     android:layout_width="match_parent"
-                    android:background="@drawable/edit_text_background"
+
                     android:clickable="false"
                     android:focusable="false"
                     android:padding="12dp"
@@ -80,7 +78,7 @@
                 <EditText
                     android:id="@+id/androidId"
                     android:layout_width="match_parent"
-                    android:background="@drawable/edit_text_background"
+
                     android:clickable="false"
                     android:focusable="false"
                     android:padding="12dp"
@@ -90,8 +88,11 @@
                     android:textSize="16sp"
                     tools:ignore="HardcodedText" />
             </TableRow>
+            <!-- Device Name -->
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-            <TableRow>
                 <TextView
                     android:layout_width="wrap_content"
                     android:padding="12dp"
@@ -102,8 +103,8 @@
 
                 <EditText
                     android:id="@+id/deviceName"
-                    android:layout_width="match_parent"
-                    android:background="@drawable/edit_text_background"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:clickable="false"
                     android:focusable="false"
                     android:padding="12dp"
@@ -114,14 +115,20 @@
 
                 <ImageView
                     android:id="@+id/editDeviceName"
-                    android:layout_width="46dp"
-                    android:layout_height="match_parent"
+                    android:layout_width="60dp"
+                    android:layout_height="45dp"
+                    android:adjustViewBounds="true"
                     android:padding="8dp"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/edit"
                     android:visibility="visible" />
             </TableRow>
 
-            <TableRow>
+            <!-- Device Model -->
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:padding="12dp"
@@ -132,8 +139,8 @@
 
                 <EditText
                     android:id="@+id/deviceModel"
-                    android:layout_width="match_parent"
-                    android:background="@drawable/edit_text_background"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:clickable="false"
                     android:focusable="false"
                     android:padding="12dp"
@@ -147,12 +154,17 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:padding="8dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/edit"
-
                     android:visibility="visible" />
             </TableRow>
 
-            <TableRow>
+            <!-- IMEI Number -->
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:padding="12dp"
@@ -163,8 +175,8 @@
 
                 <EditText
                     android:id="@+id/imeiNumber"
-                    android:layout_width="match_parent"
-                    android:background="@drawable/edit_text_background"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:clickable="false"
                     android:focusable="false"
                     android:padding="12dp"
@@ -178,12 +190,17 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:padding="8dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/edit"
-
                     android:visibility="visible" />
             </TableRow>
 
-            <TableRow>
+            <!-- Contact Number -->
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:padding="12dp"
@@ -194,8 +211,8 @@
 
                 <EditText
                     android:id="@+id/contactNumber"
-                    android:layout_width="match_parent"
-                    android:background="@drawable/edit_text_background"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:clickable="false"
                     android:focusable="false"
                     android:padding="12dp"
@@ -209,10 +226,12 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:padding="8dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
                     android:src="@drawable/edit"
-
                     android:visibility="visible" />
             </TableRow>
+
         </TableLayout>
 
         <Button
@@ -222,6 +241,7 @@
             android:layout_marginTop="25dp"
             android:backgroundTint="@color/brown"
             android:elevation="4dp"
+            android:visibility="invisible"
             android:padding="12dp"
             android:text="Update"
             android:textColor="@color/white"

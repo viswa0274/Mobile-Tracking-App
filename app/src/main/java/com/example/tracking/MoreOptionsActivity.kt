@@ -4,10 +4,13 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.text.InputFilter
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.firebase.firestore.FirebaseFirestore
@@ -33,6 +36,7 @@ class MoreOptionsActivity : AppCompatActivity() {
     private var androidId: String = ""
     private var editingField: EditText? = null
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_more_options)
@@ -50,10 +54,16 @@ class MoreOptionsActivity : AppCompatActivity() {
         editDeviceModel = findViewById(R.id.editDeviceModel)
         editImei = findViewById(R.id.editImei)
         editContactNumber = findViewById(R.id.editContactNumber)
-        updateButton = findViewById(R.id.updateButton)  // Add Update Button
+        updateButton = findViewById(R.id.updateButton)
 
-        // Disable editing initially
-        disableEditing()
+        // Always make edit icons and update button visible
+        editDeviceName.visibility = View.VISIBLE
+        editDeviceModel.visibility = View.VISIBLE
+        editImei.visibility = View.VISIBLE
+        editContactNumber.visibility = View.VISIBLE
+        updateButton.visibility = View.VISIBLE
+        imeiNumberEditText.filters = arrayOf(InputFilter.LengthFilter(15)) // Limit IMEI to 15 chars
+        contactNumberEditText.filters = arrayOf(InputFilter.LengthFilter(10)) // Limit Contact to 10 chars
 
         // Fetch Android ID
         androidId = getAndroidId()
@@ -63,13 +73,142 @@ class MoreOptionsActivity : AppCompatActivity() {
         listenForDeviceUpdates(androidId)
 
         // Set onClickListeners for edit icons
-        editDeviceName.setOnClickListener { enableEditing(deviceNameEditText) }
-        editDeviceModel.setOnClickListener { enableEditing(deviceModelEditText) }
-        editImei.setOnClickListener { enableEditing(imeiNumberEditText) }
-        editContactNumber.setOnClickListener { enableEditing(contactNumberEditText) }
+        editDeviceName.setOnClickListener { showEditDialog("Device Name", "deviceName", deviceNameEditText.text.toString()) }
+        editDeviceModel.setOnClickListener { showEditDialog("Device Model", "model", deviceModelEditText.text.toString()) }
+        editImei.setOnClickListener { showEditDialog("IMEI Number", "serialNumber", imeiNumberEditText.text.toString()) }
+        editContactNumber.setOnClickListener { showEditDialog("Contact Number", "contactNumber", contactNumberEditText.text.toString()) }
+
 
         // Set update button action
-        updateButton.setOnClickListener { updateDeviceInfo() }
+        updateButton.setOnClickListener {
+            val imeiText = imeiNumberEditText.text.toString().trim()
+            val contactText = contactNumberEditText.text.toString().trim()
+
+            // Strict validation for IMEI: Must be exactly 15 digits
+            if (imeiText.length != 15) {
+                Toast.makeText(this, "IMEI must be exactly 15 numeric digits", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!imeiText.all { it.isDigit() }) {
+                Toast.makeText(this, "IMEI must contain only numbers", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // Strict validation for Contact Number: Must be exactly 10 digits
+            if (contactText.length != 10) {
+                Toast.makeText(this, "Contact Number must be exactly 10 numeric digits", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            if (!contactText.all { it.isDigit() }) {
+                Toast.makeText(this, "Contact Number must contain only numbers", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // If both inputs are valid, proceed with update
+            updateDeviceInfo()
+        }
+
+
+
+    }
+
+    private fun showEditDialog(title: String, field: String, currentValue: String) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Edit $title")
+
+        val input = EditText(this)
+        input.setText(currentValue)
+        input.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+
+        builder.setView(input)
+
+        builder.setPositiveButton("Update") { _, _ ->
+            val newValue = input.text.toString().trim()
+
+            if (newValue.isBlank()) {
+                Toast.makeText(this, "$title cannot be empty", Toast.LENGTH_SHORT).show()
+                return@setPositiveButton
+            }
+
+            // IMEI validation
+            if (field == "serialNumber" && (newValue.length != 15 || !newValue.all { it.isDigit() })) {
+                Toast.makeText(this, "IMEI must be exactly 15 numeric digits", Toast.LENGTH_SHORT).show()
+                return@setPositiveButton
+            }
+
+            // Contact number validation
+            if (field == "contactNumber" && (newValue.length != 10 || !newValue.all { it.isDigit() })) {
+                Toast.makeText(this, "Contact Number must be exactly 10 numeric digits", Toast.LENGTH_SHORT).show()
+                return@setPositiveButton
+            }
+
+            updateDeviceField(field, newValue) // Proceed only if valid
+        }
+
+        builder.setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+
+        builder.show()
+    }
+
+    private fun updateDeviceField(fieldToUpdate: String, newValue: String) {
+        if (newValue.isBlank()) {
+            Toast.makeText(this, "Value cannot be empty", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // IMEI validation
+        if (fieldToUpdate == "serialNumber" && (newValue.length != 15 || !newValue.all { it.isDigit() })) {
+            Toast.makeText(this, "IMEI must be exactly 15 numeric digits", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Contact number validation
+        if (fieldToUpdate == "contactNumber" && (newValue.length != 10 || !newValue.all { it.isDigit() })) {
+            Toast.makeText(this, "Contact Number must be exactly 10 numeric digits", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        progressBar.visibility = View.VISIBLE
+
+        db.collection("device")
+            .whereEqualTo("androidId", androidId)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
+                    Toast.makeText(this, "Device not found", Toast.LENGTH_SHORT).show()
+                    progressBar.visibility = View.GONE
+                    return@addOnSuccessListener
+                }
+
+                val docId = documents.documents[0].id
+                db.collection("device").document(docId)
+                    .update(fieldToUpdate, newValue)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Updated successfully", Toast.LENGTH_SHORT).show()
+                        progressBar.visibility = View.GONE
+                        refreshUI(fieldToUpdate, newValue) // Update UI
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Update failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                        progressBar.visibility = View.GONE
+                    }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                progressBar.visibility = View.GONE
+            }
+    }
+
+    private fun refreshUI(field: String, newValue: String) {
+        when (field) {
+            "deviceName" -> deviceNameEditText.setText(newValue)
+            "model" -> deviceModelEditText.setText(newValue)
+            "serialNumber" -> imeiNumberEditText.setText(newValue)
+            "contactNumber" -> contactNumberEditText.setText(newValue)
+        }
     }
 
     @SuppressLint("HardwareIds")
@@ -117,23 +256,6 @@ class MoreOptionsActivity : AppCompatActivity() {
             }
     }
 
-    private fun enableEditing(editText: EditText) {
-        // Disable all fields first
-        deviceNameEditText.isEnabled = false
-        deviceModelEditText.isEnabled = false
-        imeiNumberEditText.isEnabled = false
-        contactNumberEditText.isEnabled = false
-
-        // Enable only the selected field
-        editText.isEnabled = true
-        editText.requestFocus()
-        editingField = editText
-
-        // Show update button
-        updateButton.visibility = View.VISIBLE
-    }
-
-
     private fun disableEditing() {
         // Disable all fields
         deviceNameEditText.isEnabled = false
@@ -141,9 +263,14 @@ class MoreOptionsActivity : AppCompatActivity() {
         imeiNumberEditText.isEnabled = false
         contactNumberEditText.isEnabled = false
 
-        // Hide update button initially
+        // Hide the update button when no field is being edited
         updateButton.visibility = View.GONE
+
+        // Reset the active editing field
+        editingField = null
     }
+
+
 
     private fun updateDeviceInfo() {
         val fieldToUpdate = when (editingField) {
@@ -184,7 +311,7 @@ class MoreOptionsActivity : AppCompatActivity() {
                     .addOnSuccessListener {
                         Toast.makeText(this, "Updated successfully", Toast.LENGTH_SHORT).show()
                         progressBar.visibility = View.GONE
-                        disableEditing()  // Disable editing after update
+                        disableEditing()  // Ensure fields become non-editable after update
                     }
                     .addOnFailureListener { e ->
                         Toast.makeText(this, "Update failed: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -196,6 +323,7 @@ class MoreOptionsActivity : AppCompatActivity() {
                 progressBar.visibility = View.GONE
             }
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
