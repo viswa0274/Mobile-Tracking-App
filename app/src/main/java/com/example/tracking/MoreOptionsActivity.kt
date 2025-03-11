@@ -118,10 +118,13 @@ class MoreOptionsActivity : AppCompatActivity() {
     }
 
     private fun enableEditing(editText: EditText) {
-        // Disable previous editing field if any
-        editingField?.isEnabled = false
+        // Disable all fields first
+        deviceNameEditText.isEnabled = false
+        deviceModelEditText.isEnabled = false
+        imeiNumberEditText.isEnabled = false
+        contactNumberEditText.isEnabled = false
 
-        // Enable the selected field for editing
+        // Enable only the selected field
         editText.isEnabled = true
         editText.requestFocus()
         editingField = editText
@@ -129,6 +132,7 @@ class MoreOptionsActivity : AppCompatActivity() {
         // Show update button
         updateButton.visibility = View.VISIBLE
     }
+
 
     private fun disableEditing() {
         // Disable all fields

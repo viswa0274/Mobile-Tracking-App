@@ -1,53 +1,42 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    android:backgroundTint="@color/white"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    android:layout_margin="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="6dp"
+    app:strokeWidth="2dp"
+    app:strokeColor="@color/gray">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
 
-        <TableLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <Space
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1" />
-            </TableRow>
-        </TableLayout>
+        android:padding="20dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:paddingVertical="8dp"
+            android:paddingVertical="10dp"
             android:text="Edit Device Details"
-            android:textColor="@color/black"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textColor="@color/burgundy"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.05" />
 
         <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/progressBar"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_gravity="center"
             android:visibility="gone"
             app:indicatorColor="@color/progressColor"
-            app:indicatorSize="48dp"
-            app:trackThickness="4dp" />
+            app:indicatorSize="50dp"
+            app:trackThickness="5dp" />
 
         <TableLayout
             android:layout_width="match_parent"
@@ -57,9 +46,8 @@
 
             <TableRow>
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:padding="8dp"
+                    android:layout_width="wrap_content"
+                    android:padding="12dp"
                     android:text="User ID"
                     android:textColor="@color/black"
                     android:textSize="16sp"
@@ -67,45 +55,46 @@
 
                 <EditText
                     android:id="@+id/userID"
-                    android:layout_width="0dp"
-                    android:layout_weight="2"
-                    android:background="@android:color/transparent"
+                    android:layout_width="match_parent"
+                    android:background="@drawable/edit_text_background"
                     android:clickable="false"
                     android:focusable="false"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:text="Sample Device"
-                    android:textColor="@color/navy"
-                    android:textSize="16sp" />
+                    android:textColor="@color/bur"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    tools:ignore="HardcodedText" />
             </TableRow>
 
             <TableRow>
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:padding="8dp"
+                    android:layout_width="wrap_content"
+                    android:padding="12dp"
                     android:text="Android ID"
                     android:textColor="@color/black"
                     android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    tools:ignore="HardcodedText" />
 
                 <EditText
                     android:id="@+id/androidId"
-                    android:layout_width="0dp"
-                    android:layout_weight="2"
-                    android:background="@android:color/transparent"
+                    android:layout_width="match_parent"
+                    android:background="@drawable/edit_text_background"
                     android:clickable="false"
                     android:focusable="false"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:text="78afv07007asew"
-                    android:textColor="@color/navy"
-                    android:textSize="16sp" />
+                    android:textColor="@color/bur"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    tools:ignore="HardcodedText" />
             </TableRow>
 
             <TableRow>
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:padding="8dp"
+                    android:layout_width="wrap_content"
+                    android:padding="12dp"
                     android:text="Device Name"
                     android:textColor="@color/black"
                     android:textSize="16sp"
@@ -113,21 +102,20 @@
 
                 <EditText
                     android:id="@+id/deviceName"
-                    android:layout_width="0dp"
-                    android:layout_weight="2"
-                    android:background="@android:color/transparent"
+                    android:layout_width="match_parent"
+                    android:background="@drawable/edit_text_background"
                     android:clickable="false"
                     android:focusable="false"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:text="Sample Device"
-                    android:textColor="@color/navy"
+                    android:textColor="@color/bur"
+                    android:textStyle="bold"
                     android:textSize="16sp" />
 
                 <ImageView
                     android:id="@+id/editDeviceName"
-                    android:layout_width="40dp"
+                    android:layout_width="46dp"
                     android:layout_height="match_parent"
-                    android:contentDescription="Edit"
                     android:padding="8dp"
                     android:src="@drawable/edit"
                     android:visibility="visible" />
@@ -135,9 +123,8 @@
 
             <TableRow>
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:padding="8dp"
+                    android:layout_width="wrap_content"
+                    android:padding="12dp"
                     android:text="Device Model"
                     android:textColor="@color/black"
                     android:textSize="16sp"
@@ -145,31 +132,30 @@
 
                 <EditText
                     android:id="@+id/deviceModel"
-                    android:layout_width="0dp"
-                    android:layout_weight="2"
-                    android:background="@android:color/transparent"
+                    android:layout_width="match_parent"
+                    android:background="@drawable/edit_text_background"
                     android:clickable="false"
                     android:focusable="false"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:text="Sample Model"
-                    android:textColor="@color/navy"
+                    android:textColor="@color/bur"
+                    android:textStyle="bold"
                     android:textSize="16sp" />
 
                 <ImageView
                     android:id="@+id/editDeviceModel"
-                    android:layout_width="35dp"
-                    android:layout_height="match_parent"
-                    android:contentDescription="Edit"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:padding="8dp"
                     android:src="@drawable/edit"
-                    android:visibility="visible"/>
+
+                    android:visibility="visible" />
             </TableRow>
 
             <TableRow>
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:padding="8dp"
+                    android:layout_width="wrap_content"
+                    android:padding="12dp"
                     android:text="IMEI Number"
                     android:textColor="@color/black"
                     android:textSize="16sp"
@@ -177,31 +163,30 @@
 
                 <EditText
                     android:id="@+id/imeiNumber"
-                    android:layout_width="0dp"
-                    android:layout_weight="2"
-                    android:background="@android:color/transparent"
+                    android:layout_width="match_parent"
+                    android:background="@drawable/edit_text_background"
                     android:clickable="false"
                     android:focusable="false"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:text="Imei"
-                    android:textColor="@color/navy"
+                    android:textColor="@color/bur"
+                    android:textStyle="bold"
                     android:textSize="16sp" />
 
                 <ImageView
                     android:id="@+id/editImei"
-                    android:layout_width="35dp"
-                    android:layout_height="match_parent"
-                    android:contentDescription="Edit"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:padding="8dp"
                     android:src="@drawable/edit"
-                    android:visibility="visible"/>
+
+                    android:visibility="visible" />
             </TableRow>
 
             <TableRow>
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:padding="8dp"
+                    android:layout_width="wrap_content"
+                    android:padding="12dp"
                     android:text="Contact Number"
                     android:textColor="@color/black"
                     android:textSize="16sp"
@@ -209,24 +194,24 @@
 
                 <EditText
                     android:id="@+id/contactNumber"
-                    android:layout_width="0dp"
-                    android:layout_weight="2"
-                    android:background="@android:color/transparent"
+                    android:layout_width="match_parent"
+                    android:background="@drawable/edit_text_background"
                     android:clickable="false"
                     android:focusable="false"
-                    android:padding="8dp"
+                    android:padding="12dp"
                     android:text="+1234567890"
-                    android:textColor="@color/navy"
+                    android:textColor="@color/bur"
+                    android:textStyle="bold"
                     android:textSize="16sp" />
 
                 <ImageView
                     android:id="@+id/editContactNumber"
-                    android:layout_width="37dp"
-                    android:layout_height="match_parent"
-                    android:contentDescription="Edit"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:padding="8dp"
                     android:src="@drawable/edit"
-                    android:visibility="visible"/>
+
+                    android:visibility="visible" />
             </TableRow>
         </TableLayout>
 
@@ -234,13 +219,15 @@
             android:id="@+id/updateButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:backgroundTint="@color/primaryColor"
-            android:padding="10dp"
+            android:layout_marginTop="25dp"
+            android:backgroundTint="@color/brown"
+            android:elevation="4dp"
+            android:padding="12dp"
             android:text="Update"
             android:textColor="@color/white"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:cornerRadius="10dp" />
 
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>
