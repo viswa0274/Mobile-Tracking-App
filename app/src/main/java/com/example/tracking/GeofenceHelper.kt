@@ -106,9 +106,7 @@ class GeofenceHelper(private val context: Context) {
     ) {
         val currentAndroidId = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
-        // Check if the dynamic Android ID matches the passed androidId
         if (currentAndroidId != androidId) {
-            // Show message and prevent setting/updating the geofence for another device
             Toast.makeText(context, "You can only update the geofence for your device.", Toast.LENGTH_SHORT).show()
             popupWindow.dismiss()
             return
@@ -116,59 +114,54 @@ class GeofenceHelper(private val context: Context) {
 
         val geofenceRef = firestore.collection("geofence")
 
-        // Check if the geofence already exists for the current device
         geofenceRef.whereEqualTo("androidId", androidId)
             .get()
             .addOnSuccessListener { result ->
                 if (!result.isEmpty) {
-                    // If geofence exists, update it
                     val documentId = result.documents[0].id
                     val storedAndroidId = result.documents[0].getString("androidId")
 
                     if (storedAndroidId == androidId) {
-                        // Update geofence document in Firestore
+                        // **Update existing geofence**
                         geofenceRef.document(documentId)
                             .update(
                                 mapOf(
                                     "geofenceName" to geofenceName,
                                     "radius" to radius,
-                                    "location" to GeoPoint(latitude, longitude), // Using GeoPoint
-                                    "serialNumber" to serialNumber
+                                    "location" to GeoPoint(latitude, longitude),
+                                    "serialNumber" to serialNumber,
+                                    "insideGeofence" to true // **Added this field**
                                 )
                             )
                             .addOnSuccessListener {
                                 Toast.makeText(context, "Geofence updated successfully!", Toast.LENGTH_SHORT).show()
                                 popupWindow.dismiss()
-
-                                // Start LocationForegroundService to track location
                                 startLocationService(androidId, latitude, longitude, radius)
                             }
                             .addOnFailureListener { e ->
                                 Toast.makeText(context, "Failed to update geofence: ${e.message}", Toast.LENGTH_SHORT).show()
                             }
                     } else {
-                        // Prevent update for a different device
                         Toast.makeText(context, "You can only update the geofence for your device.", Toast.LENGTH_SHORT).show()
                         popupWindow.dismiss()
                     }
                 } else {
-                    // If no geofence exists, create a new one
+                    // **Create new geofence**
                     val geofenceId = firestore.collection("geofence").document().id
                     val newGeofence = mapOf(
                         "geofenceId" to geofenceId,
                         "geofenceName" to geofenceName,
                         "radius" to radius,
-                        "location" to GeoPoint(latitude, longitude), // Using GeoPoint
+                        "location" to GeoPoint(latitude, longitude),
                         "androidId" to androidId,
-                        "serialNumber" to serialNumber
+                        "serialNumber" to serialNumber,
+                        "insideGeofence" to true // **Added this field**
                     )
 
                     geofenceRef.add(newGeofence)
                         .addOnSuccessListener {
                             Toast.makeText(context, "Geofence set successfully!", Toast.LENGTH_SHORT).show()
                             popupWindow.dismiss()
-
-                            // Start LocationForegroundService to track location
                             startLocationService(androidId, latitude, longitude, radius)
                         }
                         .addOnFailureListener { e ->
@@ -180,6 +173,7 @@ class GeofenceHelper(private val context: Context) {
                 Toast.makeText(context, "Error checking geofence: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 
     private fun startLocationService(androidId: String, latitude: Double, longitude: Double, radius: Double) {
         val intent = Intent(context, LocationForegroundService::class.java).apply {
