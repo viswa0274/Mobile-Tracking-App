@@ -100,27 +100,29 @@ class LocationForegroundService : Service() {
     }
 
     private fun saveGeofenceState(androidId: String, isInside: Boolean) {
-        val geofenceRef = firestore.collection("geofence").whereEqualTo("androidId", androidId)
+        val geofenceRef = firestore.collection("geofence")
+            .whereEqualTo("androidId", androidId)
 
-        geofenceRef.get().addOnSuccessListener { documents ->
-            if (!documents.isEmpty) {
-                val documentId = documents.documents[0].id
-                firestore.collection("geofence").document(documentId)
-                    .set(mapOf("insideGeofence" to isInside), SetOptions.merge())  // Use `set` instead of `update`
-                    .addOnSuccessListener {
-                        Log.d("LocationService", "Geofence state updated: $isInside")
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e("LocationService", "Failed to update geofence state: ${e.message}")
-                    }
-            } else {
-                Log.d("LocationService", "No geofence found for androidId: $androidId")
+        geofenceRef.get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val documentId = documents.documents[0].id  // Get the first matching document ID
+                    firestore.collection("geofence").document(documentId)
+                        .update("insideGeofence", isInside)
+                        .addOnSuccessListener {
+                            Log.d("LocationService", "Geofence state updated: $isInside")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("LocationService", "Failed to update geofence state: ${e.message}")
+                        }
+                } else {
+                    Log.d("LocationService", "No geofence found for androidId: $androidId")
+                }
             }
-        }.addOnFailureListener { e ->
-            Log.e("LocationService", "Failed to query geofence: ${e.message}")
-        }
+            .addOnFailureListener { e ->
+                Log.e("LocationService", "Failed to query geofence: ${e.message}")
+            }
     }
-
 
 
     private fun wasInsideGeofence(androidId: String, callback: (Boolean) -> Unit) {
@@ -248,9 +250,8 @@ class LocationForegroundService : Service() {
             wasInsideGeofence(androidId) { wasInside ->
                 if (distance > geofenceRadius && wasInside) {
                     Log.d("LocationService", "Device exited geofence")
-
-                    saveGeofenceState(androidId, false)
                     fetchDeviceUserId(androidId)
+                    saveGeofenceState(androidId, false)
                 } else if (distance <= geofenceRadius && !wasInside) {
                     Log.d("LocationService", "Device entered geofence")
                     //sendGeofenceEntryNotification()
