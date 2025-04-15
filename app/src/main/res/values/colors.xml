@@ -10,6 +10,7 @@
     <color name="Colors">#FF6200EE</color> <!-- A vibrant purple shade for buttons -->
     <color name="brown">#102C57</color>
     <color name="bur">#6A1E55</color>
+    <color name="warningRed">#D32F2F</color>
 
     <color name="buttonColor">#FF6F00</color>
     <color name="lightBackground">#F5F5F5</color>  <!-- Light Background -->

@@ -29,17 +29,6 @@ class SimChangeWorker(context: Context, workerParams: WorkerParameters) : Worker
         checkSimChange()
         return Result.success()
     }
-
-    @SuppressLint("HardwareIds")
-    private fun checkSimChange() {
-        val androidId = Settings.Secure.getString(applicationContext.contentResolver, Settings.Secure.ANDROID_ID)
-        fetchDeviceDetails(androidId)
-    }
-
-
-
-
-
     private fun fetchDeviceDetails(androidId: String) {
         firestore.collection("device")
             .whereEqualTo("androidId", androidId)
@@ -54,35 +43,25 @@ class SimChangeWorker(context: Context, workerParams: WorkerParameters) : Worker
                         val deviceName = document.getString("deviceName") ?: "Unknown Device"
                         val deviceModel = document.getString("model") ?: "Unknown Model"
                         val currentSimNumber = getSimPhoneNumber()
-                      //  listenForRemoteLock(document.id)
+                        //  listenForRemoteLock(document.id)
                         // Save registeredNumber offline
                         saveRegisteredNumber(registeredNumber)
 
                         // Check SIM change
                         if (isInternetAvailable()) {
                             listenForSimChange(userId)
-                            if (registeredNumber != null && (currentSimNumber == null || registeredNumber != currentSimNumber)) {
-                                updateSimChangeStatus(document.id, userId, deviceName, deviceModel)
-                            } else {
-                                // If SIM has not changed, update simChanged to false
-                                firestore.collection("device")
-                                    .whereEqualTo("androidId", androidId)
-                                    .get()
-                                    .addOnSuccessListener { documents ->
-                                        for (document in documents) {
-                                            firestore.collection("device").document(document.id)
-                                                .update("simChanged", false)
-                                                .addOnSuccessListener {
-                                                    Log.d("SimChangeWorker", "Updated simChanged to false for device: ${document.id}")
-                                                }
-                                                .addOnFailureListener { e ->
-                                                    Log.e("SimChangeWorker", "Failed to update simChanged: ${e.message}")
-                                                }
-                                        }
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Log.e("SimChangeWorker", "Failed to fetch device details: ${e.message}")
-                                    }
+
+                            if (registeredNumber != null) {
+                                val simChanged = currentSimNumber == null || registeredNumber != currentSimNumber
+                                updateSimChangeStatus(document.id, userId, deviceName, deviceModel, simChanged)
+                            }else {
+                                updateSimChangeStatus(
+                                    document.id,
+                                    userId,
+                                    deviceName,
+                                    deviceModel,
+                                    false
+                                )
 
                             }
                         }
@@ -93,20 +72,38 @@ class SimChangeWorker(context: Context, workerParams: WorkerParameters) : Worker
                 Log.e("SimChangeWorker", "Failed to fetch device details: ${e.message}")
             }
     }
+    @SuppressLint("HardwareIds")
+    private fun checkSimChange() {
+        val androidId = Settings.Secure.getString(applicationContext.contentResolver, Settings.Secure.ANDROID_ID)
+        fetchDeviceDetails(androidId)
+    }
 
-    private fun updateSimChangeStatus(deviceId: String, userId: String, deviceName: String, deviceModel: String) {
-        val currentSimNumber = getSimPhoneNumber()
 
+
+
+
+
+
+    private fun updateSimChangeStatus(
+        deviceId: String,
+        userId: String,
+        deviceName: String,
+        deviceModel: String,
+        simChanged: Boolean
+    ) {
         firestore.collection("device").document(deviceId)
-            .update("simChanged", currentSimNumber == null)
+            .update("simChanged", simChanged)
             .addOnSuccessListener {
-                Log.d("SimChangeWorker", "Updated simChanged for device: $deviceId")
-                sendSimChangeNotification(deviceName, deviceModel)
+                Log.d("SimChangeWorker", "Updated simChanged to $simChanged for device: $deviceId")
+                if (simChanged) {
+                    sendSimChangeNotification(deviceName, deviceModel)
+                }
             }
             .addOnFailureListener { e ->
                 Log.e("SimChangeWorker", "Failed to update simChanged: ${e.message}")
             }
     }
+
 
     private fun listenForSimChange(userId: String) {
         firestore.collection("device")

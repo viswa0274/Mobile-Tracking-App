@@ -132,6 +132,7 @@ class GeofenceHelper(private val context: Context) {
                                 mapOf(
                                     "geofenceName" to geofenceName,
                                     "radius" to radius,
+                                    "insideGeofence" to true,
                                     "location" to GeoPoint(latitude, longitude), // Using GeoPoint
                                     "serialNumber" to serialNumber
                                 )
@@ -158,6 +159,7 @@ class GeofenceHelper(private val context: Context) {
                         "geofenceId" to geofenceId,
                         "geofenceName" to geofenceName,
                         "radius" to radius,
+                        "insideGeofence" to true,
                         "location" to GeoPoint(latitude, longitude), // Using GeoPoint
                         "androidId" to androidId,
                         "serialNumber" to serialNumber

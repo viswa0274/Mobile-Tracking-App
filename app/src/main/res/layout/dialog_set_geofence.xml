@@ -39,7 +39,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:boxStrokeColor="@color/darkGrey"
-
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusBottomStart="12dp"
@@ -60,7 +59,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 app:boxStrokeColor="@color/darkGrey"
-
                 app:boxCornerRadiusTopStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
                 app:boxCornerRadiusBottomStart="12dp"
@@ -75,6 +73,18 @@
                     android:textColor="@android:color/black"
                     android:textSize="16sp"/>
             </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Radius Info Text -->
+            <TextView
+                android:id="@+id/radiusWarningText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="For reliable performance, set the radius above 100 meters."
+                android:textColor="@color/warningRed"
+                android:textSize="14sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="italic"/>
 
             <!-- Set Geofence Button -->
             <com.google.android.material.button.MaterialButton
